@@ -113,6 +113,21 @@ public class Vector3f
 	{
 		return x;
 	}
+	
+	public int getXInt()
+	{
+		return (int)x;
+	}
+	
+	public int getYInt()
+	{
+		return (int)y;
+	}
+	
+	public int getZInt()
+	{
+		return (int)z;
+	}
 
 	public void setX(float x) 
 	{

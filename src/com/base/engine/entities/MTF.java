@@ -1,57 +1,44 @@
-package com.base.engine;
+package com.base.engine.entities;
 
 import java.util.ArrayList;
 import java.util.Random;
 
-public class Monster 
+import com.base.engine.EntityUtil;
+import com.base.engine.Game;
+import com.base.engine.Material;
+import com.base.engine.Mesh;
+import com.base.engine.Player;
+import com.base.engine.Shader;
+import com.base.engine.Texture;
+import com.base.engine.Time;
+import com.base.engine.Transform;
+import com.base.engine.Vector2f;
+import com.base.engine.Vector3f;
+import com.base.engine.Vertex;
+
+public class MTF extends Entity
 {
-	public static String[] monsterNames = {"MONSTER", "SCP-106"};
-
-	public static final float START = 0, SCALE = 0.7f, SIZEY = SCALE, SIZEX = (float)((double)SIZEY / (1.9310344827586206896551724137931 * 2.0));
-	public static final float OFFSET_X = 0f, OFFSET_Y = 0f;
-	public static final float TEX_MIN_X = -OFFSET_X, TEX_MAX_X = -1 - OFFSET_X, TEX_MIN_Y = -OFFSET_Y, TEX_MAX_Y = 1 - OFFSET_Y;
-
-	public static final int STATE_IDLE = 0, STATE_CHASE = 1, STATE_ATTACK = 2, STATE_DYING = 3, STATE_DEAD = 4;
-	public float OFFSET_FROM_GROUND = 0f;
-	public float MOVE_SPEED = 1f;
-	public float STOP_DISTANCE = 1.5f;
-	public float WIDTH = 0.2f, LENGTH = 0.2f;
-	public float SHOOT_DISTANCE = 1000f, SHOT_ANGLE = 10f;
-	public float ATTACK_CHANCE = 0.5f;
-	public int MAX_HEALTH = 100;
-	public int DAMAGE_MIN = 5, DAMAGE_MAX = 30;
-	public int ID = 0;
-
-	protected Mesh mesh;
-	protected ArrayList<Texture> animations;
-
-	protected Material material;
-	protected Transform transform;
-	protected Random rand;
-	protected int state, health;
-	protected boolean canLook, canAttack, canPassThroughWalls;
-	protected double deathTime;
-
-	public Monster(Transform transform)
+	public MTF(Transform transform)
 	{
+		super(transform);
 		animations = new ArrayList<Texture>();
-		animations.add(new Texture("SSWVA1.png"));
-		animations.add(new Texture("SSWVB1.png"));
-		animations.add(new Texture("SSWVC1.png"));
-		animations.add(new Texture("SSWVD1.png"));
+		animations.add(new Texture("old/SSWVA1.png"));
+		animations.add(new Texture("old/SSWVB1.png"));
+		animations.add(new Texture("old/SSWVC1.png"));
+		animations.add(new Texture("old/SSWVD1.png"));
 
-		animations.add(new Texture("SSWVE0.png"));
-		animations.add(new Texture("SSWVF0.png"));
-		animations.add(new Texture("SSWVG0.png"));
+		animations.add(new Texture("old/SSWVE0.png"));
+		animations.add(new Texture("old/SSWVF0.png"));
+		animations.add(new Texture("old/SSWVG0.png"));
 
-		animations.add(new Texture("SSWVH0.png"));
+		animations.add(new Texture("old/SSWVH0.png"));
 
-		animations.add(new Texture("SSWVI0.png"));
-		animations.add(new Texture("SSWVJ0.png"));
-		animations.add(new Texture("SSWVK0.png"));
-		animations.add(new Texture("SSWVL0.png"));
+		animations.add(new Texture("old/SSWVI0.png"));
+		animations.add(new Texture("old/SSWVJ0.png"));
+		animations.add(new Texture("old/SSWVK0.png"));
+		animations.add(new Texture("old/SSWVL0.png"));
 
-		animations.add(new Texture("SSWVM0.png"));
+		animations.add(new Texture("old/SSWVM0.png"));
 
 
 		Vertex[] vertices = new Vertex[]{new Vertex(new Vector3f(-SIZEX, START, START), new Vector2f(TEX_MAX_X, TEX_MAX_Y)),
@@ -65,12 +52,15 @@ public class Monster
 		rand = new Random();
 		this.transform = transform;
 		canLook = canAttack = canPassThroughWalls = false;
+		canOpenDoors = true;
 		health = MAX_HEALTH;
 		material = new Material(animations.get(0));
 		deathTime = 0;
 		state = STATE_IDLE;
+		ID = -1;
 	}
 
+	@Override
 	protected void idleUpdate(Vector3f orientation, float distance)
 	{
 		double time = ((double)Time.getTime() / (double)Time.SECOND);
@@ -99,31 +89,13 @@ public class Monster
 		}
 	}
 
+	@Override
 	protected void chaseUpdate(Vector3f orientation, float distance)
 	{
-		double time = ((double)Time.getTime() / (double)Time.SECOND);
-		double timeDecimals = time - (double)((int)time);
-
-		chaseAnim(timeDecimals);
-
-		if(rand.nextDouble() < ATTACK_CHANCE * Time.getDelta()) state = STATE_ATTACK;
-
-		if(distance > STOP_DISTANCE)
-		{
-			float moveAmount = MOVE_SPEED * (float)Time.getDelta();
-
-			Vector3f oldPos = transform.getTranslation();
-			Vector3f newPos = transform.getTranslation().add(orientation.mul(moveAmount));
-
-			Vector3f collisionVector = Game.getLevel().checkCollisions(oldPos, newPos, WIDTH, LENGTH);
-			if(canPassThroughWalls) collisionVector = new Vector3f(1f, 0f, 1f);
-			Vector3f movementVector = collisionVector.mul(orientation);
-			if(movementVector.length() > 0) transform.setTranslation(transform.getTranslation().add(movementVector.mul(moveAmount)));
-			if(movementVector.sub(orientation).length() != 0) Game.getLevel().openDoors(transform.getTranslation(), false);
-		}
-		else state = STATE_ATTACK;
+		chase(orientation, distance);
 	}
 
+	@Override
 	protected void attackUpdate(Vector3f orientation, float distance)
 	{
 		double time = ((double)Time.getTime() / (double)Time.SECOND);
@@ -131,26 +103,7 @@ public class Monster
 
 		if(timeDecimals < 0.25) material.setTexture(animations.get(4));
 		else if(timeDecimals < 0.5) material.setTexture(animations.get(5));
-		else if(timeDecimals < 0.75)
-		{
-			material.setTexture(animations.get(6));
-			if(canAttack)
-			{
-				Vector2f lineStart = new Vector2f(transform.getTranslation().getX(), transform.getTranslation().getZ());
-				Vector2f castDirection = new Vector2f(orientation.getX(), orientation.getZ()).rotate((rand.nextFloat() - 0.5f) * SHOT_ANGLE);
-				Vector2f lineEnd = lineStart.add(castDirection.mul(SHOOT_DISTANCE));
-
-				Vector2f collisionVector = Game.getLevel().checkIntersections(lineStart, lineEnd, false);
-				Vector2f playerIntersect = Game.getLevel().lineIntersectRect(lineStart, lineEnd, new Vector2f(Transform.getCamera().getPos().getX(), Transform.getCamera().getPos().getZ()), new Vector2f(Player.PLAYER_SIZE, Player.PLAYER_SIZE));
-
-				if(playerIntersect != null && (collisionVector == null || playerIntersect.sub(lineStart).length() < collisionVector.sub(lineStart).length()))
-				{
-					Game.getLevel().getPlayer().damage(getDamage());
-				}
-				state = STATE_CHASE;
-				canAttack = false;
-			}
-		}
+		else if(timeDecimals < 0.75) shoot(orientation, distance);
 		else
 		{
 			canAttack = true;
@@ -158,6 +111,7 @@ public class Monster
 		}
 	}
 
+	@Override
 	protected void dyingUpdate(Vector3f orientation, float distance)
 	{
 		double time = ((double)Time.getTime() / (double)Time.SECOND);
@@ -187,6 +141,7 @@ public class Monster
 		else state = STATE_DEAD;
 	}
 
+	@Override
 	protected void deadUpdate(Vector3f orientation, float distance)
 	{
 		material.setTexture(animations.get(12));
@@ -256,5 +211,36 @@ public class Monster
 	public String toString()
 	{
 		return monsterNames[ID] + " - (" + (int)getTransform().getTranslation().getX() + ", " + (int)getTransform().getTranslation().getY() + ")";
+	}
+	
+	public int getID()
+	{
+		return ID;
+	}
+	
+	public boolean isSCP()
+	{
+		return (ID >= 0)? true : false;
+	}
+	
+	protected void shoot(Vector3f orientation, float distance)
+	{
+		material.setTexture(animations.get(6));
+		if(canAttack)
+		{
+			Vector2f lineStart = new Vector2f(transform.getTranslation().getX(), transform.getTranslation().getZ());
+			Vector2f castDirection = new Vector2f(orientation.getX(), orientation.getZ()).rotate((rand.nextFloat() - 0.5f) * SHOT_ANGLE);
+			Vector2f lineEnd = lineStart.add(castDirection.mul(SHOOT_DISTANCE));
+
+			Vector2f collisionVector = Game.getLevel().checkIntersections(lineStart, lineEnd, false);
+			Vector2f playerIntersect = Game.getLevel().lineIntersectRect(lineStart, lineEnd, new Vector2f(Transform.getCamera().getPos().getX(), Transform.getCamera().getPos().getZ()), new Vector2f(Player.PLAYER_SIZE, Player.PLAYER_SIZE));
+
+			if(playerIntersect != null && (collisionVector == null || playerIntersect.sub(lineStart).length() < collisionVector.sub(lineStart).length()))
+			{
+				Game.getLevel().getPlayer().damage(getDamage());
+			}
+			state = STATE_CHASE;
+			canAttack = false;
+		}
 	}
 }

@@ -1,5 +1,6 @@
 package com.base.engine;
 
+
 public class BasicShader extends Shader
 {
 	private static final BasicShader instance = new BasicShader();
@@ -23,11 +24,8 @@ public class BasicShader extends Shader
 	
 	public void updateUniforms(Matrix4f worldMatrix, Matrix4f projectedMatrix, Material material)
 	{
-		if(material.getTexture() != null)
-			material.getTexture().bind();
-		else
-			RenderUtil.unbindTextures();
-		
+		if(material.getTexture() != null) material.getTexture().bind();
+		else RenderUtil.unbindTextures();
 		setUniform("transform", projectedMatrix);
 		setUniform("color", material.getColor());
 	}

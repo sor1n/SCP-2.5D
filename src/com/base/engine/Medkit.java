@@ -41,7 +41,7 @@ public class Medkit
 			if(player.getHealth() < Player.MAX_HEALTH)
 			{
 				player.damage(-HEAL_AMOUNT);
-				Game.getLevel().removeMedKit(this);
+				Game.getLevel().getMedkits().remove(this);
 			}
 		}
 	}

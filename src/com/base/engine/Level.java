@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import com.base.engine.entities.Entity;
+import com.base.engine.entities.SCP106;
+
 public class Level 
 {
 	public static final float SPOT_WIDTH = 1;
@@ -12,29 +15,28 @@ public class Level
 	public static final int NUM_TEX_EXP = 4, NUM_TEXTURES = (int)Math.pow(2, NUM_TEX_EXP);
 	public static final float GUN_DISTANCE = 0.07f, GUN_OFFSET = -0.0275f;
 
-	private Mesh mesh, gunMesh;
+	private Mesh mesh;
 	private Bitmap level;
 	private Shader shader;
-	private Material material, gunMaterial;
-	private Transform transform, gunTransform;
+	private Material material;
+	private Transform transform;
 	private Player player;
 
 	private List<Door> doors;
-	private List<Monster> monsters;
+	private List<Entity> monsters;
 	private List<Medkit> medkits;
 	private List<Vector3f> exitPoints;
-	
+	private List<Particle> particles;
+
 	private ArrayList<Vector2f> collisionPosStart, collisionPosEnd;
 
 	public Level(String lvlName, String texName)
 	{
 		level = new Bitmap(lvlName).flipY();
 		material = new Material(new Texture(texName));
-		gunMaterial = new Material(new Texture("test.png"));
 		transform = new Transform();
 		shader = BasicShader.getInstance();
 		generateLevel();
-		gunTransform = new Transform(player.getCamera().getPos(), Vector3f.ZERO, new Vector3f(.02f, .02f, .02f));
 	}
 
 	public void openDoors(Vector3f pos, boolean exit)
@@ -59,13 +61,11 @@ public class Level
 
 	public void update()
 	{
-		gunTransform.setTranslation(Transform.getCamera().getPos().add(Transform.getCamera().getForward().normalized().mul(GUN_DISTANCE)));
-		gunTransform.getTranslation().setY(gunTransform.getTranslation().getY() + GUN_OFFSET);
-		//EntityUtil.faceCamera(gunTransform, new Vector3f(0f, 90f, 0f));
 		for(Door door : getDoors()) door.update();
-		player.update();
+		for(Particle particle : getParticles()) particle.update();
+		for(Entity monster : getMonsters()) monster.update();
 		for(Medkit med : getMedkits()) med.update();
-		for(Monster monster : getMonsters()) monster.update();
+		player.update();
 	}
 
 	public void render()
@@ -73,10 +73,9 @@ public class Level
 		shader.bind();
 		shader.updateUniforms(transform.getTransformation(), transform.getProjectedTransformation(), material);
 		mesh.draw();
-		shader.updateUniforms(gunTransform.getTransformation(), gunTransform.getProjectedTransformation(), gunMaterial);
-		gunMesh.draw();
 		for(Door door : getDoors()) door.render();
-		for(Monster monster : getMonsters()) monster.render();
+		for(Particle particle : getParticles()) particle.render();
+		for(Entity monster : getMonsters()) monster.render();
 		for(Medkit med : getMedkits()) med.render();
 		player.render();
 	}
@@ -155,7 +154,7 @@ public class Level
 
 		if(!(xDoor ^ yDoor))
 		{
-			System.err.println("Door misplaced >:c  |  " + x + ", " + y);
+			System.err.println("Door directions are wrong @ (" + x + ", " + y + ")");
 			new Exception().printStackTrace();
 			System.exit(1);
 		}
@@ -174,23 +173,24 @@ public class Level
 		getDoors().add(new Door(doorTrans, material, openPosition));
 	}
 
+	//FIXME
 	private void addSpecial(int blueValue, int x, int y)
 	{
-		if(blueValue == 16) addDoor(x, y);
-		if(blueValue == 1) player = new Player(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0.4378f, (y + 0.5f) * SPOT_LENGTH));
-		if(blueValue == 128) getMonsters().add(new Monster(new Transform(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0, (y + 0.5f) * SPOT_LENGTH), Vector3f.ZERO, Vector3f.ONE)));
-		if(blueValue == 192) getMedkits().add(new Medkit(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0, (y + 0.5f) * SPOT_LENGTH)));
-		if(blueValue == 97) getExitPoints().add(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0, (y + 0.5f) * SPOT_LENGTH));
-	
-		if(blueValue == 1) monsters.add(new SCP106(new Transform(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0.4378f, (y + 0.5f) * SPOT_LENGTH), Vector3f.ZERO, Vector3f.ONE)));
+		if(blueValue == 1) addDoor(x, y);
+		if(blueValue == 2) player = new Player(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0.4378f, (y + 0.5f) * SPOT_LENGTH));
+		//if(blueValue == 3) getMonsters().add(new Monster(new Transform(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0, (y + 0.5f) * SPOT_LENGTH), Vector3f.ZERO, Vector3f.ONE)));
+		if(blueValue == 4) getMedkits().add(new Medkit(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0, (y + 0.5f) * SPOT_LENGTH)));
+		if(blueValue == 5) getExitPoints().add(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0, (y + 0.5f) * SPOT_LENGTH));
+		if(blueValue == 6) monsters.add(new SCP106(new Transform(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0.4378f, (y + 0.5f) * SPOT_LENGTH), Vector3f.ZERO, Vector3f.ONE)));
 	}
 
 	private void generateLevel()
 	{
 		doors = new CopyOnWriteArrayList<Door>();
-		monsters = new CopyOnWriteArrayList<Monster>();
+		monsters = new CopyOnWriteArrayList<Entity>();
 		medkits = new CopyOnWriteArrayList<Medkit>();
 		exitPoints = new CopyOnWriteArrayList<Vector3f>();
+		particles = new CopyOnWriteArrayList<Particle>();
 		collisionPosStart = new ArrayList<Vector2f>();
 		collisionPosEnd = new ArrayList<Vector2f>();
 		ArrayList<Vertex> vertices = new ArrayList<Vertex>();
@@ -249,7 +249,6 @@ public class Level
 		vertices.toArray(vertArray);
 		indices.toArray(intArray);
 		mesh = new Mesh(vertArray, Util.toIntArray(intArray));
-		gunMesh = new Mesh("M4A1.obj");
 	}
 
 	public Vector3f checkCollisions(Vector3f oldPos, Vector3f newPos, float objectWidth, float objectLength)
@@ -279,6 +278,36 @@ public class Level
 		return new Vector3f(collisionVector.getX(), 0, collisionVector.getY());
 	}
 
+	public Vector3f checkCollisions(Vector3f oldPos, Vector3f newPos, float objectWidth, float objectLength, boolean ignoreDoors)
+	{
+		Vector2f collisionVector = new Vector2f(1, 1);
+		Vector3f movementVector = newPos.sub(oldPos);
+
+		if(movementVector.length() > 0)
+		{
+			Vector2f blockSize = new Vector2f(SPOT_WIDTH, SPOT_LENGTH);
+			Vector2f objectSize = new Vector2f(objectWidth, objectLength);
+
+			Vector2f oldPos2 = new Vector2f(oldPos.getX(), oldPos.getZ());
+			Vector2f newPos2 = new Vector2f(newPos.getX(), newPos.getZ());
+
+			for(int i = 0; i < level.getWidth(); i++)
+				for(int j = 0; j < level.getHeight(); j++)
+					if((level.getPixel(i, j) & 0xFFFFFF) == 0) collisionVector = collisionVector.mul(rectCollide(oldPos2, newPos2, objectSize, blockSize.mul(new Vector2f(i, j)), blockSize));
+			if(!ignoreDoors)
+			{
+				for(Door door : doors)
+				{
+					Vector2f doorSize = door.getDoorSize();
+					Vector3f doorPos3 = door.getTransform().getTranslation();
+					Vector2f doorPos2 = new Vector2f(doorPos3.getX(), doorPos3.getZ());
+					collisionVector = collisionVector.mul(rectCollide(oldPos2, newPos2, objectSize, doorPos2, doorSize));
+				}
+			}
+		}
+		return new Vector3f(collisionVector.getX(), 0, collisionVector.getY());
+	}
+
 	public Vector2f checkIntersections(Vector2f lineStart, Vector2f lineEnd, boolean hurtMonsters)
 	{
 		Vector2f nearestIntersection = null;
@@ -302,8 +331,8 @@ public class Level
 		if(hurtMonsters)
 		{
 			Vector2f nearestMonsterIntersect = null;
-			Monster nearestMonster = null;
-			for(Monster monster : monsters)
+			Entity nearestMonster = null;
+			for(Entity monster : monsters)
 			{
 				Vector2f monsterSize = monster.getSize();
 				Vector3f monsterPos3 = monster.getTransform().getTranslation();
@@ -319,7 +348,7 @@ public class Level
 				if(nearestMonster != null) nearestMonster.damage(player.getDamage());
 			}
 		}
-		
+
 		return nearestIntersection;
 	}
 
@@ -380,34 +409,49 @@ public class Level
 		res = findNearestVector2f(res, collisionVector, lineStart);
 		return res;
 	}
-	
+
 	public Player getPlayer()
 	{
 		return player;
 	}
 
-	public void removeMedKit(Medkit medkit)
-	{
-		getMedkits().remove(medkit);
-	}
-	
 	public synchronized List<Door> getDoors()
 	{
 		return doors;
 	}
-	
-	public synchronized List<Monster> getMonsters()
+
+	public synchronized List<Entity> getMonsters()
 	{
 		return monsters;
 	}
-	
+
 	public synchronized List<Medkit> getMedkits()
 	{
 		return medkits;
 	}
-	
+
 	public synchronized List<Vector3f> getExitPoints()
 	{
 		return exitPoints;
+	}
+
+	public synchronized List<Particle> getParticles()
+	{
+		return particles;
+	}
+	
+	public int getCoord(int i, int j)
+	{
+		return level.getPixel(i, j);
+	}
+	
+	public boolean isAir(int x, int y)
+	{
+		return (getCoord(x, y) & 0xFFFFFF) == 0;
+	}
+	
+	public boolean isDoor(int x, int y)
+	{
+		return (getCoord(x, y) & 0x0000FF) == 1;
 	}
 }

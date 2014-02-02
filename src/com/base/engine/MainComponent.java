@@ -64,7 +64,7 @@ public class MainComponent
 				game.update();
 				if(frameCounter >= Time.SECOND)
 				{
-					Window.setTitle(TITLE + " | FPS:" + frames);
+					Window.setTitle(TITLE + " | FPS: " + frames);
 					frames = 0;
 					frameCounter = 0;
 				}

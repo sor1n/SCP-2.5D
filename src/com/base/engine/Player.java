@@ -7,7 +7,7 @@ public class Player
 	public static final float START = 0, SCALE = 0.0625f, SIZEY = SCALE, SIZEX = (float)((double)SIZEY / (1.0379746835443037974683544303797 * 2.0));
 	public static final float OFFSET_X = -0.1f, OFFSET_Y = 0f;
 	public static final float TEX_MIN_X = -OFFSET_X, TEX_MAX_X = -1 - OFFSET_X, TEX_MIN_Y = -OFFSET_Y, TEX_MAX_Y = 1 - OFFSET_Y;
-	
+
 	public static final float MOUSE_SENSITIVITY = 0.5f, MOVE_SPEED = 7f;
 	public static final float PLAYER_SIZE = 0.2f, SHOOT_DISTANCE = 1000f, GUN_DISTANCE = 0.105f, GUN_OFFSET = -0.0775f;
 	public static final int DAMAGE_MIN = 20, DAMAGE_MAX = 60;
@@ -16,7 +16,7 @@ public class Player
 	private static Mesh mesh;
 	private static Material gunMaterial;
 	private static Texture[] anims;
-	
+
 	private Transform gunTransform;
 	private Camera camera;
 	private Random rand;
@@ -54,9 +54,6 @@ public class Player
 
 	public void input()
 	{
-		double time = ((double)Time.getTime() / (double)Time.SECOND);
-		double timeDecimals = time - (double)((int)time);
-		
 		if(Input.getKeyDown(Input.KEY_E)) Game.getLevel().openDoors(camera.getPos(), true);
 
 		if(Input.getKey(Input.KEY_ESCAPE))
@@ -120,7 +117,7 @@ public class Player
 		movementVector = movementVector.mul(collisionVector);
 
 		if(movementVector.length() > 0) camera.move(movementVector, movAmt);
-		
+
 		//Gun Movement
 		gunTransform.setTranslation(camera.getPos().add(camera.getForward().normalized().mul(GUN_DISTANCE)));
 		gunTransform.getTranslation().setY(gunTransform.getTranslation().getY() + GUN_OFFSET);
@@ -129,9 +126,9 @@ public class Player
 
 	public void render()
 	{
-		//Shader shader = Game.getLevel().getShader();
-		//shader.updateUniforms(gunTransform.getTransformation(), gunTransform.getProjectedTransformation(), gunMaterial);
-		//mesh.draw();
+		Shader shader = Game.getLevel().getShader();
+		shader.updateUniforms(gunTransform.getTransformation(), gunTransform.getProjectedTransformation(), gunMaterial);
+		mesh.draw();
 	}
 
 	public Camera getCamera()
@@ -150,7 +147,7 @@ public class Player
 			System.out.println("Game over.");
 		}
 	}
-	
+
 	public int getHealth()
 	{
 		return health;
