@@ -8,12 +8,12 @@ public class Player
 	public static final float OFFSET_X = -0.1f, OFFSET_Y = 0f;
 	public static final float TEX_MIN_X = -OFFSET_X, TEX_MAX_X = -1 - OFFSET_X, TEX_MIN_Y = -OFFSET_Y, TEX_MAX_Y = 1 - OFFSET_Y;
 
+	public static final float MAP_WIDTH = 10f, MAP_HEIGHT = 10f, MAP_OFFSET_X = 5, MAP_OFFSET_Y = 5;
+
 	public static final float MOUSE_SENSITIVITY = 0.5f, MOVE_SPEED = 7f;
 	public static final float PLAYER_SIZE = 0.2f, SHOOT_DISTANCE = 1000f, GUN_DISTANCE = 0.105f, GUN_OFFSET = -0.0775f;
 	public static final int DAMAGE_MIN = 20, DAMAGE_MAX = 60;
 	public static final int MAX_HEALTH = 100;
-	
-	public static final float MAP_WIDTH = 10f, MAP_HEIGHT = 10f, MAP_OFFSET_X = 5, MAP_OFFSET_Y = 5;
 
 	private static Mesh mesh;
 	private static Material gunMaterial;
@@ -23,7 +23,7 @@ public class Player
 	private Camera camera;
 	private Random rand;
 	private int health;
-	private Map miniMap;
+	//private Map miniMap;
 
 	private static boolean mouseLocked = false;
 	private Vector2f centerPosition = new Vector2f(Window.getWidth()/2, Window.getHeight()/2);
@@ -48,7 +48,7 @@ public class Player
 		health = MAX_HEALTH;
 		gunTransform = new Transform(new Vector3f(7, 7, 0), Vector3f.ZERO, Vector3f.ONE);
 		movementVector = Vector3f.ZERO;
-		miniMap = new Map(new Transform(Vector2f.getVector3f(new Vector2f(7, 7)), Vector3f.ZERO, Vector3f.ONE), level, MAP_WIDTH, MAP_HEIGHT);
+		//miniMap = new Map(new Transform(Vector2f.getVector3f(new Vector2f(7, 7)), Vector3f.ZERO, Vector3f.ONE), level, MAP_WIDTH, MAP_HEIGHT);
 	}
 
 	public int getDamage()
@@ -58,7 +58,16 @@ public class Player
 
 	public void input()
 	{
-		if(Input.getKeyDown(Input.KEY_E)) Game.getLevel().openDoors(camera.getPos(), true);
+		if(Input.getKeyDown(Input.KEY_E))
+		{
+			Game.getLevel().openDoors(camera.getPos(), true);
+//			int posX = (int)camera.getPos().getX();
+//			int posZ = (int)camera.getPos().getZ();
+//			new Map(new Vector3f(((int)(posX) - (Level.SPOT_WIDTH / 2)), 0, (int)(posZ) - 0.01f), 0, Game.getLevel()).spawn(Game.getLevel());
+//			new Map(new Vector3f(((int)(posX) + 0.01f), 0, (int)(posZ) + (Level.SPOT_LENGTH / 2)), 1, Game.getLevel()).spawn(Game.getLevel());
+//			new Map(new Vector3f(((int)(posX) - (Level.SPOT_WIDTH / 2)), 0, (int)(posZ) + 0.01f + Level.SPOT_LENGTH), 2, Game.getLevel()).spawn(Game.getLevel());
+//			new Map(new Vector3f(((int)(posX) - 0.01f - Level.SPOT_WIDTH), 0, (int)(posZ) + (Level.SPOT_LENGTH / 2)), 3, Game.getLevel()).spawn(Game.getLevel());
+		}
 
 		if(Input.getKey(Input.KEY_ESCAPE))
 		{
@@ -111,7 +120,8 @@ public class Player
 
 	public void update()
 	{
-		miniMap.update();
+		//miniMap.update();
+
 		float movAmt = (float)(MOVE_SPEED * Time.getDelta());
 		movementVector.setY(0);
 		if(movementVector.length() > 0) movementVector = movementVector.normalized();
@@ -131,10 +141,10 @@ public class Player
 
 	public void render()
 	{
-//		Shader shader = Game.getLevel().getShader();
-//		shader.updateUniforms(gunTransform.getTransformation(), gunTransform.getProjectedTransformation(), gunMaterial);
-//		mesh.draw();
-		miniMap.render();
+		//		Shader shader = Game.getLevel().getShader();
+		//		shader.updateUniforms(gunTransform.getTransformation(), gunTransform.getProjectedTransformation(), gunMaterial);
+		//		mesh.draw();
+		//	miniMap.render();
 	}
 
 	public Camera getCamera()
@@ -157,10 +167,5 @@ public class Player
 	public int getHealth()
 	{
 		return health;
-	}
-	
-	public Map getMiniMap()
-	{
-		return miniMap;
 	}
 }

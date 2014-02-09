@@ -58,6 +58,13 @@ public class MTF extends Entity
 		deathTime = 0;
 		state = STATE_IDLE;
 		ID = -1;
+		rgbValue = new int[]{0, 0, 8};
+		entityName = "MTF";
+	}
+	
+	public MTF()
+	{
+		this(new Transform());
 	}
 
 	@Override
@@ -210,7 +217,7 @@ public class MTF extends Entity
 
 	public String toString()
 	{
-		return monsterNames[ID] + " - (" + (int)getTransform().getTranslation().getX() + ", " + (int)getTransform().getTranslation().getY() + ")";
+		return entityName + " - (" + (int)getTransform().getTranslation().getX() + ", " + (int)getTransform().getTranslation().getY() + ")";
 	}
 	
 	public int getID()

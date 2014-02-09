@@ -46,7 +46,7 @@ public class Game
 		switch(levelNum)
 		{
 		case 1:
-			level = new Level("Room_Begin.png", "WolfCollection.png");
+			level = new Level("Room_Begin", "WolfCollection.png");
 			break;
 		default:
 			int i = new Random().nextInt(roomSize) + 1;

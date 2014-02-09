@@ -2,9 +2,7 @@ package com.base.engine.entities;
 
 import java.util.ArrayList;
 
-import com.base.engine.Corrosion;
 import com.base.engine.Game;
-import com.base.engine.Level;
 import com.base.engine.Texture;
 import com.base.engine.Time;
 import com.base.engine.Transform;
@@ -26,6 +24,13 @@ public class SCP106 extends Entity
 		STOP_DISTANCE = .5f;
 		canPassThroughWalls = true;
 		ID = 106;
+		entityName = "SCP-106";
+		rgbValue = new int[]{0xFF0000, 0, 6};
+	}
+	
+	public SCP106()
+	{
+		this(new Transform());
 	}
 
 	@Override

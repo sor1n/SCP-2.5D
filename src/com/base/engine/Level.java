@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.base.engine.entities.Entity;
-import com.base.engine.entities.SCP096;
-import com.base.engine.entities.SCP106;
 
 public class Level 
 {
@@ -15,9 +13,9 @@ public class Level
 	public static final float SPOT_HEIGHT = 1;
 	public static final int NUM_TEX_EXP = 4, NUM_TEXTURES = (int)Math.pow(2, NUM_TEX_EXP);
 	public static final float GUN_DISTANCE = 0.07f, GUN_OFFSET = -0.0275f;
-
+	
 	private Mesh mesh;
-	private Bitmap level;
+	private Bitmap levelFloor, levelWalls, levelObjects;
 	private Shader shader;
 	private Material material;
 	private Transform transform;
@@ -33,7 +31,9 @@ public class Level
 
 	public Level(String lvlName, String texName)
 	{
-		level = new Bitmap(lvlName).flipY();
+		levelFloor = new Bitmap(lvlName + "/" + lvlName + "_Floor.png").flipY();
+		levelWalls = new Bitmap(lvlName + "/" + lvlName + "_Walls.png").flipY();
+		levelObjects = new Bitmap(lvlName + "/" + lvlName + "_Objects.png").flipY();
 		material = new Material(new Texture(texName));
 		transform = new Transform();
 		shader = BasicShader.getInstance();
@@ -158,8 +158,8 @@ public class Level
 	{
 		Transform doorTrans = new Transform();
 
-		boolean xDoor = (level.getPixel(x, y - 1) & 0xFFFFFF) == 0 && (level.getPixel(x, y + 1) & 0xFFFFFF) == 0;
-		boolean yDoor = (level.getPixel(x - 1, y) & 0xFFFFFF) == 0 && (level.getPixel(x + 1, y) & 0xFFFFFF) == 0;
+		boolean xDoor = (levelFloor.getPixel(x, y - 1) & 0xFFFFFF) == 0 && (levelFloor.getPixel(x, y + 1) & 0xFFFFFF) == 0;
+		boolean yDoor = (levelFloor.getPixel(x - 1, y) & 0xFFFFFF) == 0 && (levelFloor.getPixel(x + 1, y) & 0xFFFFFF) == 0;
 
 		if(!(xDoor ^ yDoor))
 		{
@@ -183,15 +183,30 @@ public class Level
 	}
 
 	//FIXME
-	private void addSpecial(int blueValue, int x, int y)
+	private void addSpecial(int red, int green, int blue, int x, int y)
 	{
-		if(blueValue == 1) addDoor(x, y);
-		if(blueValue == 2) player = new Player(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0.4378f, (y + 0.5f) * SPOT_LENGTH), this);
-		//if(blueValue == 3) getMonsters().add(new Monster(new Transform(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0, (y + 0.5f) * SPOT_LENGTH), Vector3f.ZERO, Vector3f.ONE)));
-		if(blueValue == 4) getMedkits().add(new Medkit(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0, (y + 0.5f) * SPOT_LENGTH)));
-		if(blueValue == 5) getExitPoints().add(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0, (y + 0.5f) * SPOT_LENGTH));
-		if(blueValue == 6) monsters.add(new SCP106(new Transform(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0.4378f, (y + 0.5f) * SPOT_LENGTH), Vector3f.ZERO, Vector3f.ONE)));
-		if(blueValue == 7) monsters.add(new SCP096(new Transform(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0.4378f, (y + 0.5f) * SPOT_LENGTH), Vector3f.ZERO, Vector3f.ONE)));
+		if(blue == 1) addDoor(x, y);
+		else if(blue == 2) player = new Player(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0.4378f, (y + 0.5f) * SPOT_LENGTH), this);
+		else if(blue == 4) getMedkits().add(new Medkit(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0, (y + 0.5f) * SPOT_LENGTH)));
+		else if(blue == 5) getExitPoints().add(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0, (y + 0.5f) * SPOT_LENGTH));
+		else if(blue > 5)
+		{
+			for(int i = 0; i < Entity.monsters.length; i++)
+			{
+				try 
+				{
+					Entity ent = (Entity) Entity.monsters[i].newInstance();
+					if(ent.getRGBValue()[0] == red && ent.getRGBValue()[1] == green && ent.getRGBValue()[2] == blue)
+					{
+						ent.getTransform().setScale(Vector3f.ONE);
+						ent.getTransform().setTranslation(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0, (y + 0.5f) * SPOT_LENGTH));
+						getMonsters().add(ent);
+						break;
+					}
+				}
+				catch(Exception e) {e.printStackTrace();}
+			}
+		}
 	}
 
 	private void generateLevel()
@@ -206,13 +221,13 @@ public class Level
 		ArrayList<Vertex> vertices = new ArrayList<Vertex>();
 		ArrayList<Integer> indices = new ArrayList<Integer>();
 
-		for(int i = 0; i < level.getWidth(); i++)
-			for(int j = 0; j < level.getHeight(); j++)
+		for(int i = 0; i < levelFloor.getWidth(); i++)
+			for(int j = 0; j < levelFloor.getHeight(); j++)
 			{
-				if((level.getPixel(i, j) & 0xFFFFFF) == 0) continue;
-				float[] texCoords = calcTexCoords((level.getPixel(i, j) & 0x00FF00) >> 8);
+				if((levelFloor.getPixel(i, j) & 0xFFFFFF) == 0) continue;
+				float[] texCoords = calcTexCoords((levelFloor.getPixel(i, j) & 0x00FF00) >> 8);
 
-				addSpecial((level.getPixel(i, j) & 0x0000FF), i, j);
+				addSpecial((levelObjects.getPixel(i, j) & 0xFF0000), (levelObjects.getPixel(i, j) & 0x00FF00), (levelObjects.getPixel(i, j) & 0x0000FF), i, j);
 
 				//Generate Floor
 				addFace(indices, vertices.size(), true);
@@ -223,29 +238,29 @@ public class Level
 				addVertices(vertices, i, j, true, false, true, 1, texCoords);
 
 				//Generate Walls
-				texCoords = calcTexCoords((level.getPixel(i, j) & 0xFF0000) >> 16);
-				if((level.getPixel(i, j - 1) & 0xFFFFFF) == 0)
+				texCoords = calcTexCoords((levelWalls.getPixel(i, j) & 0xFF0000) >> 16);
+				if((levelWalls.getPixel(i, j - 1) & 0xFFFFFF) == 0)
 				{
 					collisionPosStart.add(new Vector2f(i * SPOT_WIDTH, j * SPOT_LENGTH));
 					collisionPosEnd.add(new Vector2f((i + 1) * SPOT_WIDTH, j * SPOT_LENGTH));
 					addFace(indices, vertices.size(), false);
 					addVertices(vertices, i, 0, true, true, false, j, texCoords);
 				}
-				if((level.getPixel(i, j + 1) & 0xFFFFFF) == 0)
+				if((levelWalls.getPixel(i, j + 1) & 0xFFFFFF) == 0)
 				{
 					collisionPosStart.add(new Vector2f(i * SPOT_WIDTH, (j + 1) * SPOT_LENGTH));
 					collisionPosEnd.add(new Vector2f((i + 1) * SPOT_WIDTH, (j + 1) * SPOT_LENGTH));
 					addFace(indices, vertices.size(), true);
 					addVertices(vertices, i, 0, true, true, false, (j + 1), texCoords);
 				}
-				if((level.getPixel(i - 1, j) & 0xFFFFFF) == 0)
+				if((levelWalls.getPixel(i - 1, j) & 0xFFFFFF) == 0)
 				{
 					collisionPosStart.add(new Vector2f(i * SPOT_WIDTH, j * SPOT_LENGTH));
 					collisionPosEnd.add(new Vector2f(i * SPOT_WIDTH, (j + 1) * SPOT_LENGTH));
 					addFace(indices, vertices.size(), true);
 					addVertices(vertices, 0, j, false, true, true, i, texCoords);
 				}
-				if((level.getPixel(i + 1, j) & 0xFFFFFF) == 0)
+				if((levelWalls.getPixel(i + 1, j) & 0xFFFFFF) == 0)
 				{
 					collisionPosStart.add(new Vector2f((i + 1) * SPOT_WIDTH, j * SPOT_LENGTH));
 					collisionPosEnd.add(new Vector2f((i + 1) * SPOT_WIDTH, (j + 1) * SPOT_LENGTH));
@@ -274,9 +289,9 @@ public class Level
 			Vector2f oldPos2 = new Vector2f(oldPos.getX(), oldPos.getZ());
 			Vector2f newPos2 = new Vector2f(newPos.getX(), newPos.getZ());
 
-			for(int i = 0; i < level.getWidth(); i++)
-				for(int j = 0; j < level.getHeight(); j++)
-					if((level.getPixel(i, j) & 0xFFFFFF) == 0) collisionVector = collisionVector.mul(rectCollide(oldPos2, newPos2, objectSize, blockSize.mul(new Vector2f(i, j)), blockSize));
+			for(int i = 0; i < levelFloor.getWidth(); i++)
+				for(int j = 0; j < levelFloor.getHeight(); j++)
+					if((levelFloor.getPixel(i, j) & 0xFFFFFF) == 0) collisionVector = collisionVector.mul(rectCollide(oldPos2, newPos2, objectSize, blockSize.mul(new Vector2f(i, j)), blockSize));
 			for(Door door : doors)
 			{
 				Vector2f doorSize = door.getDoorSize();
@@ -301,9 +316,9 @@ public class Level
 			Vector2f oldPos2 = new Vector2f(oldPos.getX(), oldPos.getZ());
 			Vector2f newPos2 = new Vector2f(newPos.getX(), newPos.getZ());
 
-			for(int i = 0; i < level.getWidth(); i++)
-				for(int j = 0; j < level.getHeight(); j++)
-					if((level.getPixel(i, j) & 0xFFFFFF) == 0) collisionVector = collisionVector.mul(rectCollide(oldPos2, newPos2, objectSize, blockSize.mul(new Vector2f(i, j)), blockSize));
+			for(int i = 0; i < levelFloor.getWidth(); i++)
+				for(int j = 0; j < levelFloor.getHeight(); j++)
+					if((levelFloor.getPixel(i, j) & 0xFFFFFF) == 0) collisionVector = collisionVector.mul(rectCollide(oldPos2, newPos2, objectSize, blockSize.mul(new Vector2f(i, j)), blockSize));
 			if(!ignoreDoors)
 			{
 				for(Door door : doors)
@@ -493,7 +508,7 @@ public class Level
 
 	public int getCoord(int i, int j)
 	{
-		return level.getPixel(i, j);
+		return levelFloor.getPixel(i, j);
 	}
 
 	public boolean isAir(int x, int y)
@@ -504,5 +519,10 @@ public class Level
 	public boolean isDoor(int x, int y)
 	{
 		return (getCoord(x, y) & 0x0000FF) == 1;
+	}
+
+	public String getLevelMap()
+	{
+		return levelFloor.getPath();
 	}
 }

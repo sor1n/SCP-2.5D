@@ -9,11 +9,13 @@ public class Bitmap
 {
 	private int width, height;
 	private int[] pixels;
+	private String path;
 	
 	public Bitmap(String fileName)
 	{
 		try
 		{
+			path = "bitmaps/" + fileName;
 			BufferedImage image = ImageIO.read(this.getClass().getClassLoader().getResource("bitmaps/" + fileName));
 			width = image.getWidth();
 			height = image.getHeight();
@@ -82,5 +84,10 @@ public class Bitmap
 	public void setPixel(int x, int y, int value)
 	{
 		pixels[x + y * width] = value;
+	}
+	
+	public String getPath()
+	{
+		return path;
 	}
 }

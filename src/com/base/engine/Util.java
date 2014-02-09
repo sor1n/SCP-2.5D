@@ -97,4 +97,16 @@ public class Util
 		if(i > 0) return 1;
 		else return -1;
 	}
+	
+	public static boolean intBetween(int a, int min, int max)
+	{
+		if(a > min && a < max) return true;
+		else return false;
+	}
+	
+	public static boolean floatBetween(float a, float min, float max)
+	{
+		if(a > min && a < max) return true;
+		else return false;
+	}
 }

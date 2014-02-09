@@ -13,6 +13,8 @@ public class SCP096 extends Entity
 {
 	public static final double TIME_DELAY = 200.0;
 
+	public float viewingAngle = 0.2f;
+	
 	private double cryTime = 0;
 	private Vector3f target = null;
 	private double targetInt = 0;
@@ -34,6 +36,13 @@ public class SCP096 extends Entity
 		MOVE_SPEED = 1f;
 		canPassThroughWalls = false;
 		ID = 96;
+		entityName = "SCP-096";
+		rgbValue = new int[]{0xFF0000, 0, 7};
+	}
+	
+	public SCP096()
+	{
+		this(new Transform());
 	}
 
 	@Override
@@ -42,7 +51,7 @@ public class SCP096 extends Entity
 		MOVE_SPEED = 1f;
 		cryTime = 0;
 		super.idleUpdate(orientation, distance);
-		if(isPlayerLooking()) state = STATE_DYING;
+		if(isPlayerDirectlyLooking(orientation, viewingAngle)) state = STATE_DYING;
 		else if(new Random().nextInt(200) < 20 && target == null)
 		{
 			targetInt = 0;

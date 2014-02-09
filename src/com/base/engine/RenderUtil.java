@@ -5,6 +5,8 @@ import static org.lwjgl.opengl.GL32.GL_DEPTH_CLAMP;
 
 import java.io.IOException;
 
+import org.lwjgl.opengl.Display;
+import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.Color;
 import org.newdawn.slick.opengl.TextureLoader;
 import org.newdawn.slick.util.ResourceLoader;
@@ -35,6 +37,10 @@ public class RenderUtil
 	
 	public static void initGraphics()
 	{
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glOrtho(0, 800, 0, 600, 1, -1);
+		glMatrixMode(GL_MODELVIEW);
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		
 		glFrontFace(GL_CW);
@@ -147,7 +153,7 @@ public class RenderUtil
 	{
 		try
 		{
-			org.newdawn.slick.opengl.Texture texture = TextureLoader.getTexture("PNG", ResourceLoader.getResourceAsStream("res/" + name + ".png"));
+			org.newdawn.slick.opengl.Texture texture = TextureLoader.getTexture("PNG", ResourceLoader.getResourceAsStream("res/" + name));
 			//			consoleMessage("Texture loaded: "+ texture);
 			//			consoleMessage(">> Image width: "+ texture.getImageWidth());
 			//			consoleMessage(">> Image height: "+ texture.getImageHeight());
@@ -158,5 +164,28 @@ public class RenderUtil
 		} 
 		catch(IOException e) {}
 		return null;
+	}
+	
+	public static void enable2D()
+	{
+		GL11.glMatrixMode(GL11.GL_PROJECTION);
+		GL11.glPushMatrix();
+		GL11.glLoadIdentity();
+		GL11.glOrtho(0, Display.getDisplayMode().getWidth(),
+				Display.getDisplayMode().getHeight(), 0, -1, 1);
+		GL11.glDisable(GL11.GL_DEPTH_TEST);
+		GL11.glMatrixMode(GL11.GL_MODELVIEW);
+		GL11.glPushMatrix();
+		GL11.glLoadIdentity();
+	}
+
+	public static void disable2D()
+	{
+		GL11.glEnable(GL11.GL_DEPTH_TEST);
+		GL11.glMatrixMode(GL11.GL_PROJECTION);
+		GL11.glPopMatrix();
+		GL11.glMatrixMode(GL11.GL_MODELVIEW);
+		GL11.glPopMatrix();
+		GL11.glLoadIdentity();
 	}
 }

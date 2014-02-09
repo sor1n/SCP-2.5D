@@ -1,57 +1,43 @@
 package com.base.engine;
 
-public class Map
+public class Map extends Particle
 {
-	public static final float START = 0, SCALE = 0.0625f, SIZEY = SCALE, SIZEX = (float)((double)SIZEY / (1.0379746835443037974683544303797 * 2.0));
-	public static final float OFFSET_X = -0.1f, OFFSET_Y = 0f;
-	public static final float TEX_MIN_X = -OFFSET_X, TEX_MAX_X = -1 - OFFSET_X, TEX_MIN_Y = -OFFSET_Y, TEX_MAX_Y = 1 - OFFSET_Y, GUN_DISTANCE = 0.105f, GUN_OFFSET = -0.0775f;
-
-	private Transform transform;
-	private Level level;
-	private Mesh mesh;
-	protected Material material;
-	protected float width, height;
-	protected Texture texture;
-
-	public Map(Transform transform, Level level, float width, float height)
+	public Map(Vector3f pos, int dir, Level level)
 	{
-		this.width = width;
-		this.height = height;
-		this.level = level;
-		Vertex[] vertices = new Vertex[]{new Vertex(new Vector3f(-SIZEX, START, START), new Vector2f(TEX_MAX_X, TEX_MAX_Y)),
-				new Vertex(new Vector3f(-SIZEX, SIZEY, START), new Vector2f(TEX_MAX_X, TEX_MIN_Y)),
-				new Vertex(new Vector3f(SIZEX, SIZEY, START), new Vector2f(TEX_MIN_X, TEX_MIN_Y)),
-				new Vertex(new Vector3f(SIZEX, START, START), new Vector2f(TEX_MIN_X, TEX_MAX_Y))};
-		int[] indices = new int[]{0, 1, 2,
-				0, 2, 3};
-		mesh = new Mesh(vertices, indices);
-		material = new Material(new Texture("test.png"));
-		this.transform = transform;
-		texture = new Texture("test.png");
+		super(pos);
+		material = new Material(new Texture(level.getLevelMap(), true));
+		transform = new Transform(pos, Vector3f.ZERO, new Vector3f(Level.SPOT_WIDTH + 1f, Level.SPOT_HEIGHT + .35f, Level.SPOT_LENGTH + 1f));
+		switch(dir)
+		{
+		default:
+		case 0: 
+			transform.setRotation(0f, 0f, 0f);
+			break;
+		case 1:
+			transform.setRotation(0f, 90f, 0f);
+			break;
+		case 2:
+			transform.setRotation(0f, 180f, 0f);
+			break;
+		case 3:
+			transform.setRotation(0f, 270f, 0f);
+			break;
+		}
 	}
 
 	public void update()
 	{
-		
+		//		transform.setTranslation(Transform.getCamera().getPos().add(Transform.getCamera().getForward().normalized().mul(GUN_DISTANCE)));
+		//		transform.getTranslation().setY(transform.getTranslation().getY() + GUN_OFFSET);
+		//
+		//		playerTrans.setTranslation(Transform.getCamera().getPos().add(Transform.getCamera().getForward().normalized().mul(GUN_DISTANCE - 0.01f)));
+		super.update();
+		//playerTrans.getTranslation().setY(playerTrans.getTranslation().getY() + mapStartOffsetY + (Transform.getCamera().getPos().getZ() / 575) - .055f);
+		//playerTrans.getTranslation().setX(playerTrans.getTranslation().getX() - mapStartOffsetX + (Transform.getCamera().getPos().getX() / 620) - .005f);
 	}
 
 	public void render()
 	{
-		if(level != null)
-		{
-			//Shader shader = level.getShader();
-
-			mesh.draw();
-		}
-	}
-
-	public Transform getTransform()
-	{
-		return transform;
-	}
-
-	public Level getLevel()
-	{
-		return level;
+		super.render();
 	}
 }

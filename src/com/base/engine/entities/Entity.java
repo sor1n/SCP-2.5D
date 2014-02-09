@@ -11,13 +11,14 @@ import com.base.engine.Shader;
 import com.base.engine.Texture;
 import com.base.engine.Time;
 import com.base.engine.Transform;
+import com.base.engine.Util;
 import com.base.engine.Vector2f;
 import com.base.engine.Vector3f;
 import com.base.engine.Vertex;
 
 public class Entity 
 {
-	public static String[] monsterNames = {"MTF", "SCP-106", "SCP-096"};
+	public static Class<?>[] monsters = {MTF.class, SCP106.class, SCP096.class};
 
 	public static final float START = 0, SCALE = 0.7f, SIZEY = SCALE, SIZEX = (float)((double)SIZEY / (1.9310344827586206896551724137931 * 2.0));
 	public static final float OFFSET_X = 0f, OFFSET_Y = 0f;
@@ -33,6 +34,9 @@ public class Entity
 	public int MAX_HEALTH = 100;
 	public int DAMAGE_MIN = 5, DAMAGE_MAX = 30;
 	protected int ID;
+	public String entityName;
+
+	public int[] rgbValue;
 
 	protected Mesh mesh;
 	protected ArrayList<Texture> animations;
@@ -62,6 +66,11 @@ public class Entity
 		deathTime = 0;
 		state = STATE_IDLE;
 		ID = -1;
+	}
+
+	public Entity()
+	{
+		this(new Transform());
 	}
 
 	protected void idleUpdate(Vector3f orientation, float distance)
@@ -145,7 +154,7 @@ public class Entity
 
 	public String toString()
 	{
-		return monsterNames[ID] + " - (" + (int)getTransform().getTranslation().getX() + ", " + (int)getTransform().getTranslation().getY() + ")";
+		return entityName + " - (" + (int)getTransform().getTranslation().getX() + ", " + (int)getTransform().getTranslation().getY() + ")";
 	}
 
 	public int getID()
@@ -185,12 +194,23 @@ public class Entity
 
 	protected void shoot(Vector3f orientation, float distance) {}
 
-	public boolean isPlayerLooking()
+	public boolean isPlayerDirectlyLooking(Vector3f orientation, float viewingAngle)
 	{
-		Vector2f lineStart = new Vector2f(Transform.getCamera().getPos().getX(), Transform.getCamera().getPos().getZ());
-		Vector2f castDir = new Vector2f(Transform.getCamera().getForward().getX(), Transform.getCamera().getForward().getZ()).normalized();
-		Vector2f lineEnd = lineStart.add(castDir.mul(SHOOT_DISTANCE));
-		return Game.getLevel().isLookingAtEntity(lineStart, lineEnd) == this;
+		Vector2f lineStart = new Vector2f(transform.getTranslation().getX(), transform.getTranslation().getZ());
+		Vector2f castDirection = new Vector2f(orientation.getX(), orientation.getZ());
+		Vector2f lineEnd = lineStart.add(castDirection.mul(SHOOT_DISTANCE));
+
+		Vector2f collisionVector = Game.getLevel().checkIntersections(lineStart, lineEnd, false);
+		Vector2f playerIntersect = new Vector2f(Transform.getCamera().getPos().getX(), Transform.getCamera().getPos().getZ());
+
+		if(collisionVector == null || playerIntersect.sub(lineStart).length() < collisionVector.sub(lineStart).length())
+		{
+			Vector2f SlineStart = new Vector2f(Transform.getCamera().getPos().getX(), Transform.getCamera().getPos().getZ());
+			Vector2f castDir = new Vector2f(Transform.getCamera().getForward().getX(), Transform.getCamera().getForward().getZ()).normalized();
+			Vector2f SlineEnd = lineStart.add(castDir.mul(SHOOT_DISTANCE));
+			if(Util.floatBetween(Transform.getCamera().getForward().getY(), -viewingAngle, viewingAngle)) return Game.getLevel().isLookingAtEntity(SlineStart, SlineEnd) == this;
+		}
+		return false;
 	}
 
 	public static double getTimeDecimal()
@@ -204,7 +224,7 @@ public class Entity
 		Vector3f directionToCamera = target.sub(entity.transform.getTranslation());
 		float distance = directionToCamera.length();
 		Vector3f orientation = directionToCamera.div(distance);
-		
+
 		float moveAmount = MOVE_SPEED * (float)Time.getDelta();
 
 		Vector3f oldPos = entity.transform.getTranslation();
@@ -216,13 +236,13 @@ public class Entity
 		if(movementVector.length() > 0) entity.transform.setTranslation(entity.transform.getTranslation().add(movementVector.mul(moveAmount)));
 		if(movementVector.sub(orientation).length() != 0 && canOpenDoors) Game.getLevel().openDoors(entity.transform.getTranslation(), false);
 	}
-	
+
 	protected boolean isMoveTo(Entity entity, Vector3f target)
 	{
 		Vector3f directionToCamera = target.sub(entity.transform.getTranslation());
 		float distance = directionToCamera.length();
 		Vector3f orientation = directionToCamera.div(distance);
-		
+
 		float moveAmount = MOVE_SPEED * (float)Time.getDelta();
 
 		Vector3f oldPos = entity.transform.getTranslation();
@@ -234,5 +254,15 @@ public class Entity
 		if(movementVector.length() > 0) entity.transform.setTranslation(entity.transform.getTranslation().add(movementVector.mul(moveAmount)));
 		if(movementVector.sub(orientation).length() != 0 && canOpenDoors) Game.getLevel().openDoors(entity.transform.getTranslation(), false);
 		return collisionVector != Vector3f.ZERO;
+	}
+
+	public int[] getRGBValue()
+	{
+		return rgbValue;
+	}
+
+	public String getEntityName()
+	{
+		return entityName;
 	}
 }
