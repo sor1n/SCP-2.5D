@@ -12,6 +12,8 @@ public class Player
 	public static final float PLAYER_SIZE = 0.2f, SHOOT_DISTANCE = 1000f, GUN_DISTANCE = 0.105f, GUN_OFFSET = -0.0775f;
 	public static final int DAMAGE_MIN = 20, DAMAGE_MAX = 60;
 	public static final int MAX_HEALTH = 100;
+	
+	public static final float MAP_WIDTH = 10f, MAP_HEIGHT = 10f, MAP_OFFSET_X = 5, MAP_OFFSET_Y = 5;
 
 	private static Mesh mesh;
 	private static Material gunMaterial;
@@ -21,12 +23,13 @@ public class Player
 	private Camera camera;
 	private Random rand;
 	private int health;
+	private Map miniMap;
 
 	private static boolean mouseLocked = false;
 	private Vector2f centerPosition = new Vector2f(Window.getWidth()/2, Window.getHeight()/2);
 	private Vector3f movementVector;
 
-	public Player(Vector3f pos)
+	public Player(Vector3f pos, Level level)
 	{
 		if(mesh == null)
 		{
@@ -45,6 +48,7 @@ public class Player
 		health = MAX_HEALTH;
 		gunTransform = new Transform(new Vector3f(7, 7, 0), Vector3f.ZERO, Vector3f.ONE);
 		movementVector = Vector3f.ZERO;
+		miniMap = new Map(new Transform(Vector2f.getVector3f(new Vector2f(7, 7)), Vector3f.ZERO, Vector3f.ONE), level, MAP_WIDTH, MAP_HEIGHT);
 	}
 
 	public int getDamage()
@@ -107,6 +111,7 @@ public class Player
 
 	public void update()
 	{
+		miniMap.update();
 		float movAmt = (float)(MOVE_SPEED * Time.getDelta());
 		movementVector.setY(0);
 		if(movementVector.length() > 0) movementVector = movementVector.normalized();
@@ -126,9 +131,10 @@ public class Player
 
 	public void render()
 	{
-		Shader shader = Game.getLevel().getShader();
-		shader.updateUniforms(gunTransform.getTransformation(), gunTransform.getProjectedTransformation(), gunMaterial);
-		mesh.draw();
+//		Shader shader = Game.getLevel().getShader();
+//		shader.updateUniforms(gunTransform.getTransformation(), gunTransform.getProjectedTransformation(), gunMaterial);
+//		mesh.draw();
+		miniMap.render();
 	}
 
 	public Camera getCamera()
@@ -151,5 +157,10 @@ public class Player
 	public int getHealth()
 	{
 		return health;
+	}
+	
+	public Map getMiniMap()
+	{
+		return miniMap;
 	}
 }

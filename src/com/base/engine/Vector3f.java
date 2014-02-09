@@ -153,4 +153,9 @@ public class Vector3f
 	{
 		this.z = z;
 	}
+	
+	public static Vector2f getVector2f(Vector3f a)
+	{
+		return new Vector2f(a.getX(), a.getZ());
+	}
 }

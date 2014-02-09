@@ -3,10 +3,6 @@ package com.base.engine.entities;
 import java.util.ArrayList;
 import java.util.Random;
 
-import org.lwjgl.opengl.GL11;
-
-import static org.lwjgl.opengl.GL11.*;
-
 import com.base.engine.EntityUtil;
 import com.base.engine.Game;
 import com.base.engine.Material;
@@ -188,4 +184,55 @@ public class Entity
 	}
 
 	protected void shoot(Vector3f orientation, float distance) {}
+
+	public boolean isPlayerLooking()
+	{
+		Vector2f lineStart = new Vector2f(Transform.getCamera().getPos().getX(), Transform.getCamera().getPos().getZ());
+		Vector2f castDir = new Vector2f(Transform.getCamera().getForward().getX(), Transform.getCamera().getForward().getZ()).normalized();
+		Vector2f lineEnd = lineStart.add(castDir.mul(SHOOT_DISTANCE));
+		return Game.getLevel().isLookingAtEntity(lineStart, lineEnd) == this;
+	}
+
+	public static double getTimeDecimal()
+	{
+		double time = ((double)Time.getTime() / (double)Time.SECOND);
+		return time - (double)((int)time);
+	}
+
+	protected void moveTo(Entity entity, Vector3f target)
+	{
+		Vector3f directionToCamera = target.sub(entity.transform.getTranslation());
+		float distance = directionToCamera.length();
+		Vector3f orientation = directionToCamera.div(distance);
+		
+		float moveAmount = MOVE_SPEED * (float)Time.getDelta();
+
+		Vector3f oldPos = entity.transform.getTranslation();
+		Vector3f newPos = entity.transform.getTranslation().add(orientation.mul(moveAmount));
+
+		Vector3f collisionVector = Game.getLevel().checkCollisions(oldPos, newPos, WIDTH, LENGTH);
+		if(canPassThroughWalls) collisionVector = new Vector3f(1f, 0f, 1f);
+		Vector3f movementVector = collisionVector.mul(orientation);
+		if(movementVector.length() > 0) entity.transform.setTranslation(entity.transform.getTranslation().add(movementVector.mul(moveAmount)));
+		if(movementVector.sub(orientation).length() != 0 && canOpenDoors) Game.getLevel().openDoors(entity.transform.getTranslation(), false);
+	}
+	
+	protected boolean isMoveTo(Entity entity, Vector3f target)
+	{
+		Vector3f directionToCamera = target.sub(entity.transform.getTranslation());
+		float distance = directionToCamera.length();
+		Vector3f orientation = directionToCamera.div(distance);
+		
+		float moveAmount = MOVE_SPEED * (float)Time.getDelta();
+
+		Vector3f oldPos = entity.transform.getTranslation();
+		Vector3f newPos = entity.transform.getTranslation().add(orientation.mul(moveAmount));
+
+		Vector3f collisionVector = Game.getLevel().checkCollisions(oldPos, newPos, WIDTH, LENGTH);
+		if(canPassThroughWalls) collisionVector = new Vector3f(1f, 0f, 1f);
+		Vector3f movementVector = collisionVector.mul(orientation);
+		if(movementVector.length() > 0) entity.transform.setTranslation(entity.transform.getTranslation().add(movementVector.mul(moveAmount)));
+		if(movementVector.sub(orientation).length() != 0 && canOpenDoors) Game.getLevel().openDoors(entity.transform.getTranslation(), false);
+		return collisionVector != Vector3f.ZERO;
+	}
 }

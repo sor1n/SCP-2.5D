@@ -5,6 +5,8 @@ public class Vector2f
 	private float x;
 	private float y;
 	
+	public static final Vector2f ZERO = new Vector2f(0, 0), ONE = new Vector2f(1, 1);
+	
 	public Vector2f(float x, float y)
 	{
 		this.x = x;
@@ -105,5 +107,10 @@ public class Vector2f
 	public void setY(float y)
 	{
 		this.y = y;
+	}
+	
+	public static Vector3f getVector3f(Vector2f a)
+	{
+		return new Vector3f(a.getX(), a.getY(), 0);
 	}
 }

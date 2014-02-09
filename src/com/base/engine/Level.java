@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.base.engine.entities.Entity;
+import com.base.engine.entities.SCP096;
 import com.base.engine.entities.SCP106;
 
 public class Level 
@@ -51,6 +52,14 @@ public class Level
 			{
 				if(eP.sub(pos).length() < Door.OPEN_DISTANCE) Game.nextLevel();
 			}
+		}
+	}
+
+	public void removeDoor(Vector3f pos)
+	{
+		for(Door door : doors) 
+		{
+			if(door.getTransform().getTranslation().sub(pos).length() < Door.OPEN_DISTANCE) getDoors().remove(door);
 		}
 	}
 
@@ -177,11 +186,12 @@ public class Level
 	private void addSpecial(int blueValue, int x, int y)
 	{
 		if(blueValue == 1) addDoor(x, y);
-		if(blueValue == 2) player = new Player(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0.4378f, (y + 0.5f) * SPOT_LENGTH));
+		if(blueValue == 2) player = new Player(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0.4378f, (y + 0.5f) * SPOT_LENGTH), this);
 		//if(blueValue == 3) getMonsters().add(new Monster(new Transform(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0, (y + 0.5f) * SPOT_LENGTH), Vector3f.ZERO, Vector3f.ONE)));
 		if(blueValue == 4) getMedkits().add(new Medkit(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0, (y + 0.5f) * SPOT_LENGTH)));
 		if(blueValue == 5) getExitPoints().add(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0, (y + 0.5f) * SPOT_LENGTH));
 		if(blueValue == 6) monsters.add(new SCP106(new Transform(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0.4378f, (y + 0.5f) * SPOT_LENGTH), Vector3f.ZERO, Vector3f.ONE)));
+		if(blueValue == 7) monsters.add(new SCP096(new Transform(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0.4378f, (y + 0.5f) * SPOT_LENGTH), Vector3f.ZERO, Vector3f.ONE)));
 	}
 
 	private void generateLevel()
@@ -306,6 +316,47 @@ public class Level
 			}
 		}
 		return new Vector3f(collisionVector.getX(), 0, collisionVector.getY());
+	}
+
+	public Entity isLookingAtEntity(Vector2f lineStart, Vector2f lineEnd)
+	{
+		Vector2f nearestIntersection = null;
+
+		for(int i = 0; i < collisionPosStart.size(); i++)
+		{
+			Vector2f collisionVector = lineIntersect(lineStart, lineEnd, collisionPosStart.get(i), collisionPosEnd.get(i));
+			nearestIntersection = findNearestVector2f(nearestIntersection, collisionVector, lineStart);
+		}
+
+		//		for(Door door : doors)
+		//		{
+		//			Vector2f doorSize = door.getDoorSize();
+		//			Vector3f doorPos3 = door.getTransform().getTranslation();
+		//			Vector2f doorPos2 = new Vector2f(doorPos3.getX(), doorPos3.getZ());
+		//
+		//			Vector2f collisionVector = lineIntersectRect(lineStart, lineEnd, doorPos2, doorSize);
+		//			nearestIntersection = findNearestVector2f(nearestIntersection, collisionVector, lineStart);
+		//		}
+
+		Vector2f nearestMonsterIntersect = null;
+		Entity nearestMonster = null;
+		for(Entity monster : monsters)
+		{
+			Vector2f monsterSize = monster.getSize();
+			Vector3f monsterPos3 = monster.getTransform().getTranslation();
+			Vector2f monsterPos2 = new Vector2f(monsterPos3.getX(), monsterPos3.getZ());
+
+			Vector2f collisionVector = lineIntersectRect(lineStart, lineEnd, monsterPos2, monsterSize);
+			Vector2f lastMonsterIntersect = nearestMonsterIntersect;
+			nearestMonsterIntersect = findNearestVector2f(nearestMonsterIntersect, collisionVector, lineStart);
+			if(lastMonsterIntersect != nearestMonsterIntersect) nearestMonster = monster;
+		}
+		if(nearestMonsterIntersect != null && (nearestIntersection == null || nearestMonsterIntersect.sub(lineStart).length() < nearestIntersection.sub(lineStart).length()))
+		{
+			if(nearestMonster != null) return nearestMonster;
+		}
+
+		return null;
 	}
 
 	public Vector2f checkIntersections(Vector2f lineStart, Vector2f lineEnd, boolean hurtMonsters)
@@ -439,17 +490,17 @@ public class Level
 	{
 		return particles;
 	}
-	
+
 	public int getCoord(int i, int j)
 	{
 		return level.getPixel(i, j);
 	}
-	
+
 	public boolean isAir(int x, int y)
 	{
 		return (getCoord(x, y) & 0xFFFFFF) == 0;
 	}
-	
+
 	public boolean isDoor(int x, int y)
 	{
 		return (getCoord(x, y) & 0x0000FF) == 1;
