@@ -73,23 +73,23 @@ public class Entity
 		this(new Transform());
 	}
 
-	protected void idleUpdate(Vector3f orientation, float distance)
+	protected void idleUpdate(Vector3f orientation, float distance, float delta)
 	{
 	}
 
-	protected void chaseUpdate(Vector3f orientation, float distance)
+	protected void chaseUpdate(Vector3f orientation, float distance, float delta)
 	{
 	}
 
-	protected void attackUpdate(Vector3f orientation, float distance)
+	protected void attackUpdate(Vector3f orientation, float distance, float delta)
 	{
 	}
 
-	protected void dyingUpdate(Vector3f orientation, float distance)
+	protected void dyingUpdate(Vector3f orientation, float distance, float delta)
 	{
 	}
 
-	protected void deadUpdate(Vector3f orientation, float distance)
+	protected void deadUpdate(Vector3f orientation, float distance, float delta)
 	{
 	}
 
@@ -98,7 +98,7 @@ public class Entity
 		transform.getTranslation().setY(OFFSET_FROM_GROUND);
 	}
 
-	public void update()
+	public void update(float delta)
 	{
 		Vector3f directionToCamera = Transform.getCamera().getPos().sub(transform.getTranslation());
 		float distance = directionToCamera.length();
@@ -108,11 +108,11 @@ public class Entity
 
 		switch(state)
 		{
-		case STATE_IDLE: idleUpdate(orientation, distance); break;
-		case STATE_CHASE: chaseUpdate(orientation, distance); break;
-		case STATE_ATTACK: attackUpdate(orientation, distance); break;
-		case STATE_DYING: dyingUpdate(orientation, distance); break;
-		case STATE_DEAD: deadUpdate(orientation, distance); break;
+		case STATE_IDLE: idleUpdate(orientation, distance, delta); break;
+		case STATE_CHASE: chaseUpdate(orientation, distance, delta); break;
+		case STATE_ATTACK: attackUpdate(orientation, distance, delta); break;
+		case STATE_DYING: dyingUpdate(orientation, distance, delta); break;
+		case STATE_DEAD: deadUpdate(orientation, distance, delta); break;
 		}
 	}
 
@@ -167,18 +167,18 @@ public class Entity
 		return (ID >= 0)? true : false;
 	}
 
-	protected void chase(Vector3f orientation, float distance)
+	protected void chase(Vector3f orientation, float distance, float delta)
 	{
-		double time = ((double)Time.getTime() / (double)Time.SECOND);
+		double time = (double)Time.getTime();
 		double timeDecimals = time - (double)((int)time);
 
 		chaseAnim(timeDecimals);
 
-		if(rand.nextDouble() < ATTACK_CHANCE * Time.getDelta()) state = STATE_ATTACK;
+		if(rand.nextDouble() < ATTACK_CHANCE * delta) state = STATE_ATTACK;
 
 		if(distance > STOP_DISTANCE)
 		{
-			float moveAmount = MOVE_SPEED * (float)Time.getDelta();
+			float moveAmount = MOVE_SPEED * delta;
 
 			Vector3f oldPos = transform.getTranslation();
 			Vector3f newPos = transform.getTranslation().add(orientation.mul(moveAmount));
@@ -215,17 +215,17 @@ public class Entity
 
 	public static double getTimeDecimal()
 	{
-		double time = ((double)Time.getTime() / (double)Time.SECOND);
+		double time = (double)Time.getTime();
 		return time - (double)((int)time);
 	}
 
-	protected void moveTo(Entity entity, Vector3f target)
+	protected void moveTo(Entity entity, Vector3f target, float delta)
 	{
 		Vector3f directionToCamera = target.sub(entity.transform.getTranslation());
 		float distance = directionToCamera.length();
 		Vector3f orientation = directionToCamera.div(distance);
 
-		float moveAmount = MOVE_SPEED * (float)Time.getDelta();
+		float moveAmount = MOVE_SPEED * delta;
 
 		Vector3f oldPos = entity.transform.getTranslation();
 		Vector3f newPos = entity.transform.getTranslation().add(orientation.mul(moveAmount));
@@ -237,13 +237,13 @@ public class Entity
 		if(movementVector.sub(orientation).length() != 0 && canOpenDoors) Game.getLevel().openDoors(entity.transform.getTranslation(), false);
 	}
 
-	protected boolean isMoveTo(Entity entity, Vector3f target)
+	protected boolean isMoveTo(Entity entity, Vector3f target, float delta)
 	{
 		Vector3f directionToCamera = target.sub(entity.transform.getTranslation());
 		float distance = directionToCamera.length();
 		Vector3f orientation = directionToCamera.div(distance);
 
-		float moveAmount = MOVE_SPEED * (float)Time.getDelta();
+		float moveAmount = MOVE_SPEED * delta;
 
 		Vector3f oldPos = entity.transform.getTranslation();
 		Vector3f newPos = entity.transform.getTranslation().add(orientation.mul(moveAmount));
@@ -264,5 +264,10 @@ public class Entity
 	public String getEntityName()
 	{
 		return entityName;
+	}
+	
+	public Vector3f getDistanceFromPlayer()
+	{
+		return Transform.getCamera().getPos().sub(transform.getTranslation());
 	}
 }

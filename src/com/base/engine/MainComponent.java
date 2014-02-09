@@ -39,18 +39,18 @@ public class MainComponent
 		
 		final double frameTime = 1.0 / FRAME_CAP;
 		
-		long lastTime = Time.getTime();
+		double lastTime = Time.getTime();
 		double unprocessedTime = 0;
 		
 		while(isRunning)
 		{
 			boolean render = false;
 			
-			long startTime = Time.getTime();
-			long passedTime = startTime - lastTime;
+			double startTime = Time.getTime();
+			double passedTime = startTime - lastTime;
 			lastTime = startTime;
 			
-			unprocessedTime += passedTime / (double)Time.SECOND;
+			unprocessedTime += passedTime;
 			frameCounter += passedTime;
 			
 			while(unprocessedTime > frameTime)
@@ -58,11 +58,10 @@ public class MainComponent
 				render = true;
 				unprocessedTime -= frameTime;
 				if(Window.isCloseRequested()) stop();
-				Time.setDelta(frameTime);
-				game.input();
+				game.input((float)frameTime);
 				Input.update();
-				game.update();
-				if(frameCounter >= Time.SECOND)
+				game.update((float)frameTime);
+				if(frameCounter >= 1.0)
 				{
 					Window.setTitle(TITLE + " | FPS: " + frames);
 					frames = 0;

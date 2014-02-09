@@ -30,7 +30,7 @@ public class Medkit
 		transform.setTranslation(pos);
 	}
 
-	public void update()
+	public void update(float delta)
 	{
 		EntityUtil.faceCamera(transform);
 

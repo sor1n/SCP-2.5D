@@ -14,14 +14,14 @@ public class Game
 		nextLevel();
 	}
 
-	public void input()
+	public void input(float delta)
 	{
-		level.input();
+		level.input(delta);
 	}
 
-	public void update()
+	public void update(float delta)
 	{
-		if(isRunning) level.update();
+		if(isRunning) level.update(delta);
 	}
 
 	public void render()

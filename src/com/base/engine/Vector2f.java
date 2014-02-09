@@ -39,6 +39,16 @@ public class Vector2f
 		return new Vector2f((float)(x * cos - y * sin),(float)(x * sin + y * cos));
 	}
 	
+	public boolean equals(Vector2f r)
+	{
+		return x == r.getX() && y == r.getY();
+	}
+	
+	public Vector2f lerp(Vector2f dst, float lerpFactor)
+	{
+		return dst.sub(this).mul(lerpFactor).add(this);
+	}
+	
 	public Vector2f add(Vector2f r)
 	{
 		return new Vector2f(x + r.getX(), y + r.getY());
@@ -82,6 +92,11 @@ public class Vector2f
 	public Vector2f abs()
 	{
 		return new Vector2f(Math.abs(x), Math.abs(y));
+	}
+	
+	public float cross(Vector2f r)
+	{
+		return x * r.getY() - y * r.getX();
 	}
 	
 	public String toString()

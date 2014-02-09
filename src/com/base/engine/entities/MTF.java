@@ -68,9 +68,9 @@ public class MTF extends Entity
 	}
 
 	@Override
-	protected void idleUpdate(Vector3f orientation, float distance)
+	protected void idleUpdate(Vector3f orientation, float distance, float delta)
 	{
-		double time = ((double)Time.getTime() / (double)Time.SECOND);
+		double time = (double)Time.getTime();
 		double timeDecimals = time - (double)((int)time);
 
 		if(timeDecimals < 0.5)
@@ -97,15 +97,15 @@ public class MTF extends Entity
 	}
 
 	@Override
-	protected void chaseUpdate(Vector3f orientation, float distance)
+	protected void chaseUpdate(Vector3f orientation, float distance, float delta)
 	{
-		chase(orientation, distance);
+		chase(orientation, distance, delta);
 	}
 
 	@Override
-	protected void attackUpdate(Vector3f orientation, float distance)
+	protected void attackUpdate(Vector3f orientation, float distance, float delta)
 	{
-		double time = ((double)Time.getTime() / (double)Time.SECOND);
+		double time = (double)Time.getTime();
 		double timeDecimals = time - (double)((int)time);
 
 		if(timeDecimals < 0.25) material.setTexture(animations.get(4));
@@ -119,9 +119,9 @@ public class MTF extends Entity
 	}
 
 	@Override
-	protected void dyingUpdate(Vector3f orientation, float distance)
+	protected void dyingUpdate(Vector3f orientation, float distance, float delta)
 	{
-		double time = ((double)Time.getTime() / (double)Time.SECOND);
+		double time = (double)Time.getTime();
 		if(deathTime == 0) deathTime = time;
 		final float time1 = 0.1f, time2 = 0.3f, time3 = 0.45f, time4 = 0.6f;
 
@@ -149,7 +149,7 @@ public class MTF extends Entity
 	}
 
 	@Override
-	protected void deadUpdate(Vector3f orientation, float distance)
+	protected void deadUpdate(Vector3f orientation, float distance, float delta)
 	{
 		material.setTexture(animations.get(12));
 		transform.setScale(1.7586206896551724137931034482759f, 0.28571428571428571428571428571429f, 1);
@@ -160,7 +160,8 @@ public class MTF extends Entity
 		transform.getTranslation().setY(OFFSET_FROM_GROUND);
 	}
 
-	public void update()
+	@Override
+	public void update(float delta)
 	{
 		Vector3f directionToCamera = Transform.getCamera().getPos().sub(transform.getTranslation());
 		float distance = directionToCamera.length();
@@ -170,14 +171,15 @@ public class MTF extends Entity
 
 		switch(state)
 		{
-		case STATE_IDLE: idleUpdate(orientation, distance); break;
-		case STATE_CHASE: chaseUpdate(orientation, distance); break;
-		case STATE_ATTACK: attackUpdate(orientation, distance); break;
-		case STATE_DYING: dyingUpdate(orientation, distance); break;
-		case STATE_DEAD: deadUpdate(orientation, distance); break;
+		case STATE_IDLE: idleUpdate(orientation, distance, delta); break;
+		case STATE_CHASE: chaseUpdate(orientation, distance, delta); break;
+		case STATE_ATTACK: attackUpdate(orientation, distance, delta); break;
+		case STATE_DYING: dyingUpdate(orientation, distance, delta); break;
+		case STATE_DEAD: deadUpdate(orientation, distance, delta); break;
 		}
 	}
 
+	@Override
 	public void render()
 	{
 		Shader shader = Game.getLevel().getShader();

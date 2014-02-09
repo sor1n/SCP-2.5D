@@ -108,4 +108,11 @@ public class Transform
 	{
 		Transform.camera = camera;
 	}
+
+	public void set(Transform transform)
+	{
+		rotation = transform.rotation;
+		scale = transform.scale;
+		translation = transform.translation;
+	}
 }

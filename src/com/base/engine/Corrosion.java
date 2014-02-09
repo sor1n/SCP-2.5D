@@ -25,7 +25,8 @@ public class Corrosion extends Particle
 		}
 	}
 
-	public void update()
+	@Override
+	public void update(float delta)
 	{
 		if(Game.getLevel().isAir(transform.getTranslation().getXInt(), transform.getTranslation().getZInt())) despawn(Game.getLevel());
 	}

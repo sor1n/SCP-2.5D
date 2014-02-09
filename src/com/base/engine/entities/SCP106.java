@@ -34,9 +34,9 @@ public class SCP106 extends Entity
 	}
 
 	@Override
-	protected void idleUpdate(Vector3f orientation, float distance)
+	protected void idleUpdate(Vector3f orientation, float distance, float delta)
 	{
-		double time = ((double)Time.getTime() / (double)Time.SECOND);
+		double time = (double)Time.getTime();
 		double timeDecimals = time - (double)((int)time);
 
 		if(timeDecimals < 0.5)
@@ -61,28 +61,28 @@ public class SCP106 extends Entity
 	}
 
 	@Override
-	protected void attackUpdate(Vector3f orientation, float distance)
+	protected void attackUpdate(Vector3f orientation, float distance, float delta)
 	{
 		material.setTexture(animations.get(0));
 		if(distance > STOP_DISTANCE) state = STATE_CHASE;
 	}
 
 	@Override
-	protected void deadUpdate(Vector3f orientation, float distance)
+	protected void deadUpdate(Vector3f orientation, float distance, float delta)
 	{
 
 	}
 
 	@Override
-	protected void dyingUpdate(Vector3f orientation, float distance)
+	protected void dyingUpdate(Vector3f orientation, float distance, float delta)
 	{
 
 	}
 
 	@Override
-	protected void chaseUpdate(Vector3f orientation, float distance)
+	protected void chaseUpdate(Vector3f orientation, float distance, float delta)
 	{
-		chase(orientation, distance);
+		chase(orientation, distance, delta);
 	}
 
 	@Override
@@ -99,18 +99,19 @@ public class SCP106 extends Entity
 		super.render();
 	}
 
-	protected void chase(Vector3f orientation, float distance)
+	@Override
+	protected void chase(Vector3f orientation, float distance, float delta)
 	{
-		double time = ((double)Time.getTime() / (double)Time.SECOND);
+		double time = (double)Time.getTime();
 		double timeDecimals = time - (double)((int)time);
 
 		chaseAnim(timeDecimals);
 
-		if(rand.nextDouble() < ATTACK_CHANCE * Time.getDelta()) state = STATE_ATTACK;
+		if(rand.nextDouble() < ATTACK_CHANCE * delta) state = STATE_ATTACK;
 
 		if(distance > STOP_DISTANCE)
 		{
-			float moveAmount = MOVE_SPEED * (float)Time.getDelta();
+			float moveAmount = MOVE_SPEED * delta;
 
 			Vector3f oldPos = transform.getTranslation();
 			Vector3f newPos = transform.getTranslation().add(orientation.mul(moveAmount));

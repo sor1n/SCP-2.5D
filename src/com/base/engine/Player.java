@@ -56,7 +56,7 @@ public class Player
 		return rand.nextInt(DAMAGE_MAX - DAMAGE_MIN) + DAMAGE_MIN;
 	}
 
-	public void input()
+	public void input(float delta)
 	{
 		if(Input.getKeyDown(Input.KEY_E))
 		{
@@ -118,11 +118,11 @@ public class Player
 		}
 	}
 
-	public void update()
+	public void update(float delta)
 	{
 		//miniMap.update();
 
-		float movAmt = (float)(MOVE_SPEED * Time.getDelta());
+		float movAmt = (float)(MOVE_SPEED * delta);
 		movementVector.setY(0);
 		if(movementVector.length() > 0) movementVector = movementVector.normalized();
 

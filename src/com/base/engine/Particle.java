@@ -23,7 +23,7 @@ public abstract class Particle
 		material = new Material(new Texture("test.png"));
 	}
 	
-	public void update()
+	public void update(float delta)
 	{
 	}
 	

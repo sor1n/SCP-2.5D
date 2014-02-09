@@ -25,11 +25,13 @@ public class Poster extends Particle
 		}
 	}
 
-	public void update()
+	@Override
+	public void update(float delta)
 	{
-		super.update();
+		super.update(delta);
 	}
 
+	@Override
 	public void render()
 	{
 		super.render();

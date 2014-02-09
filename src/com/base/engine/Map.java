@@ -25,17 +25,19 @@ public class Map extends Particle
 		}
 	}
 
-	public void update()
+	@Override
+	public void update(float delta)
 	{
 		//		transform.setTranslation(Transform.getCamera().getPos().add(Transform.getCamera().getForward().normalized().mul(GUN_DISTANCE)));
 		//		transform.getTranslation().setY(transform.getTranslation().getY() + GUN_OFFSET);
 		//
 		//		playerTrans.setTranslation(Transform.getCamera().getPos().add(Transform.getCamera().getForward().normalized().mul(GUN_DISTANCE - 0.01f)));
-		super.update();
+		super.update(delta);
 		//playerTrans.getTranslation().setY(playerTrans.getTranslation().getY() + mapStartOffsetY + (Transform.getCamera().getPos().getZ() / 575) - .055f);
 		//playerTrans.getTranslation().setX(playerTrans.getTranslation().getX() - mapStartOffsetX + (Transform.getCamera().getPos().getX() / 620) - .005f);
 	}
 
+	@Override
 	public void render()
 	{
 		super.render();

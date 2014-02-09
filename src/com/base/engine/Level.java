@@ -63,18 +63,18 @@ public class Level
 		}
 	}
 
-	public void input()
+	public void input(float delta)
 	{
-		player.input();
+		player.input(delta);
 	}
 
-	public void update()
+	public void update(float delta)
 	{
-		for(Door door : getDoors()) door.update();
-		for(Particle particle : getParticles()) particle.update();
-		for(Entity monster : getMonsters()) monster.update();
-		for(Medkit med : getMedkits()) med.update();
-		player.update();
+		for(Door door : getDoors()) door.update(delta);
+		for(Particle particle : getParticles()) particle.update(delta);
+		for(Entity monster : getMonsters()) monster.update(delta);
+		for(Medkit med : getMedkits()) med.update(delta);
+		player.update(delta);
 	}
 
 	public void render()
