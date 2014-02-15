@@ -29,6 +29,11 @@ public class Shader
 		glUseProgram(program);
 	}
 	
+	public void unbind()
+	{
+		glUseProgram(0);
+	}
+	
 	public void updateUniforms(Matrix4f worldMatrix, Matrix4f projectedMatrix, Material material)
 	{
 		

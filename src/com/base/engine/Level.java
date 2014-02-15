@@ -88,6 +88,14 @@ public class Level
 		for(Medkit med : getMedkits()) med.render();
 		player.render();
 	}
+	
+	public void renderGUI()
+	{
+		shader.unbind();
+		RenderUtil.unbindTextures();
+		RenderUtil.setTextures(true);
+		player.renderGUI();
+	}
 
 	private void addFace(ArrayList<Integer> indices, int startLocation, boolean dir)
 	{

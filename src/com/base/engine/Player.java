@@ -15,40 +15,21 @@ public class Player
 	public static final int DAMAGE_MIN = 20, DAMAGE_MAX = 60;
 	public static final int MAX_HEALTH = 100;
 
-	private static Mesh mesh;
-	private static Material gunMaterial;
-	private static Texture[] anims;
-
-	private Transform gunTransform;
 	private Camera camera;
 	private Random rand;
 	private int health;
-	//private Map miniMap;
+	private MiniMap miniMap;
 
 	private static boolean mouseLocked = false;
-	private Vector2f centerPosition = new Vector2f(Window.getWidth()/2, Window.getHeight()/2);
 	private Vector3f movementVector;
 
 	public Player(Vector3f pos, Level level)
 	{
-		if(mesh == null)
-		{
-			Vertex[] vertices = new Vertex[]{new Vertex(new Vector3f(-SIZEX, START, START), new Vector2f(TEX_MAX_X, TEX_MAX_Y)),
-					new Vertex(new Vector3f(-SIZEX, SIZEY, START), new Vector2f(TEX_MAX_X, TEX_MIN_Y)),
-					new Vertex(new Vector3f(SIZEX, SIZEY, START), new Vector2f(TEX_MIN_X, TEX_MIN_Y)),
-					new Vertex(new Vector3f(SIZEX, START, START), new Vector2f(TEX_MIN_X, TEX_MAX_Y))};
-			int[] indices = new int[]{0, 1, 2,
-					0, 2, 3};
-			mesh = new Mesh(vertices, indices);
-		}
-		if(anims == null) anims = new Texture[]{new Texture("PISGFA1.png"), new Texture("PISGFA2.png")};
-		if(gunMaterial == null) gunMaterial = new Material(anims[1]);
 		camera = new Camera(pos, new Vector3f(0, 0, 1), new Vector3f(0, 1, 0));
 		rand = new Random();
 		health = MAX_HEALTH;
-		gunTransform = new Transform(new Vector3f(7, 7, 0), Vector3f.ZERO, Vector3f.ONE);
 		movementVector = Vector3f.ZERO;
-		//miniMap = new Map(new Transform(Vector2f.getVector3f(new Vector2f(7, 7)), Vector3f.ZERO, Vector3f.ONE), level, MAP_WIDTH, MAP_HEIGHT);
+		miniMap = new MiniMap(level);
 	}
 
 	public int getDamage()
@@ -61,12 +42,12 @@ public class Player
 		if(Input.getKeyDown(Input.KEY_E))
 		{
 			Game.getLevel().openDoors(camera.getPos(), true);
-//			int posX = (int)camera.getPos().getX();
-//			int posZ = (int)camera.getPos().getZ();
-//			new Map(new Vector3f(((int)(posX) - (Level.SPOT_WIDTH / 2)), 0, (int)(posZ) - 0.01f), 0, Game.getLevel()).spawn(Game.getLevel());
-//			new Map(new Vector3f(((int)(posX) + 0.01f), 0, (int)(posZ) + (Level.SPOT_LENGTH / 2)), 1, Game.getLevel()).spawn(Game.getLevel());
-//			new Map(new Vector3f(((int)(posX) - (Level.SPOT_WIDTH / 2)), 0, (int)(posZ) + 0.01f + Level.SPOT_LENGTH), 2, Game.getLevel()).spawn(Game.getLevel());
-//			new Map(new Vector3f(((int)(posX) - 0.01f - Level.SPOT_WIDTH), 0, (int)(posZ) + (Level.SPOT_LENGTH / 2)), 3, Game.getLevel()).spawn(Game.getLevel());
+			//			int posX = (int)camera.getPos().getX();
+			//			int posZ = (int)camera.getPos().getZ();
+			//			new Map(new Vector3f(((int)(posX) - (Level.SPOT_WIDTH / 2)), 0, (int)(posZ) - 0.01f), 0, Game.getLevel()).spawn(Game.getLevel());
+			//			new Map(new Vector3f(((int)(posX) + 0.01f), 0, (int)(posZ) + (Level.SPOT_LENGTH / 2)), 1, Game.getLevel()).spawn(Game.getLevel());
+			//			new Map(new Vector3f(((int)(posX) - (Level.SPOT_WIDTH / 2)), 0, (int)(posZ) + 0.01f + Level.SPOT_LENGTH), 2, Game.getLevel()).spawn(Game.getLevel());
+			//			new Map(new Vector3f(((int)(posX) - 0.01f - Level.SPOT_WIDTH), 0, (int)(posZ) + (Level.SPOT_LENGTH / 2)), 3, Game.getLevel()).spawn(Game.getLevel());
 		}
 
 		if(Input.getKey(Input.KEY_ESCAPE))
@@ -78,20 +59,18 @@ public class Player
 		{
 			if(!mouseLocked)
 			{
-				Input.setMousePosition(centerPosition);
+				Input.setMousePosition(Window.centerPosition);
 				Input.setCursor(false);
 				mouseLocked = true;
 			}
 			else
 			{
-				gunMaterial.setTexture(anims[0]);
 				Vector2f lineStart = new Vector2f(camera.getPos().getX(), camera.getPos().getZ());
 				Vector2f castDir = new Vector2f(camera.getForward().getX(), camera.getForward().getZ()).normalized();
 				Vector2f lineEnd = lineStart.add(castDir.mul(SHOOT_DISTANCE));
 				Game.getLevel().checkIntersections(lineStart, lineEnd, true);
 			}
 		}
-		if(!Input.getMouseDown(0)) gunMaterial.setTexture(anims[1]);
 
 		movementVector = Vector3f.ZERO;
 
@@ -106,7 +85,7 @@ public class Player
 
 		if(mouseLocked)
 		{
-			Vector2f deltaPos = Input.getMousePosition().sub(centerPosition);
+			Vector2f deltaPos = Input.getMousePosition().sub(Window.centerPosition);
 
 			boolean rotY = deltaPos.getX() != 0;
 			boolean rotX = deltaPos.getY() != 0;
@@ -114,13 +93,13 @@ public class Player
 			if(rotY) camera.rotateY(deltaPos.getX() * MOUSE_SENSITIVITY);
 			if(rotX) camera.rotateX(-deltaPos.getY() * MOUSE_SENSITIVITY);
 
-			if(rotY || rotX) Input.setMousePosition(centerPosition);
+			if(rotY || rotX) Input.setMousePosition(Window.centerPosition);
 		}
 	}
 
 	public void update(float delta)
 	{
-		//miniMap.update();
+		miniMap.update(delta);
 
 		float movAmt = (float)(MOVE_SPEED * delta);
 		movementVector.setY(0);
@@ -132,19 +111,16 @@ public class Player
 		movementVector = movementVector.mul(collisionVector);
 
 		if(movementVector.length() > 0) camera.move(movementVector, movAmt);
-
-		//Gun Movement
-		gunTransform.setTranslation(camera.getPos().add(camera.getForward().normalized().mul(GUN_DISTANCE)));
-		gunTransform.getTranslation().setY(gunTransform.getTranslation().getY() + GUN_OFFSET);
-		EntityUtil.faceCamera(gunTransform);
 	}
 
 	public void render()
 	{
-		//		Shader shader = Game.getLevel().getShader();
-		//		shader.updateUniforms(gunTransform.getTransformation(), gunTransform.getProjectedTransformation(), gunMaterial);
-		//		mesh.draw();
-		//	miniMap.render();
+
+	}
+	
+	public void renderGUI()
+	{
+		miniMap.render();
 	}
 
 	public Camera getCamera()

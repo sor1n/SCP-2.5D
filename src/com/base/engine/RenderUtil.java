@@ -1,12 +1,48 @@
 package com.base.engine;
 
-import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL11.GL_BACK;
+import static org.lwjgl.opengl.GL11.GL_BLEND;
+import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11.GL_CULL_FACE;
+import static org.lwjgl.opengl.GL11.GL_CW;
+import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
+import static org.lwjgl.opengl.GL11.GL_MODELVIEW;
+import static org.lwjgl.opengl.GL11.GL_NEAREST;
+import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
+import static org.lwjgl.opengl.GL11.GL_PROJECTION;
+import static org.lwjgl.opengl.GL11.GL_QUADS;
+import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_MAG_FILTER;
+import static org.lwjgl.opengl.GL11.GL_VERSION;
+import static org.lwjgl.opengl.GL11.glBegin;
+import static org.lwjgl.opengl.GL11.glBindTexture;
+import static org.lwjgl.opengl.GL11.glBlendFunc;
+import static org.lwjgl.opengl.GL11.glClear;
+import static org.lwjgl.opengl.GL11.glClearColor;
+import static org.lwjgl.opengl.GL11.glColor3f;
+import static org.lwjgl.opengl.GL11.glCullFace;
+import static org.lwjgl.opengl.GL11.glDisable;
+import static org.lwjgl.opengl.GL11.glEnable;
+import static org.lwjgl.opengl.GL11.glEnd;
+import static org.lwjgl.opengl.GL11.glFrontFace;
+import static org.lwjgl.opengl.GL11.glGetString;
+import static org.lwjgl.opengl.GL11.glLoadIdentity;
+import static org.lwjgl.opengl.GL11.glMatrixMode;
+import static org.lwjgl.opengl.GL11.glOrtho;
+import static org.lwjgl.opengl.GL11.glPopMatrix;
+import static org.lwjgl.opengl.GL11.glPushMatrix;
+import static org.lwjgl.opengl.GL11.glRotatef;
+import static org.lwjgl.opengl.GL11.glScalef;
+import static org.lwjgl.opengl.GL11.glTexCoord2f;
+import static org.lwjgl.opengl.GL11.glTexParameteri;
+import static org.lwjgl.opengl.GL11.glTranslatef;
+import static org.lwjgl.opengl.GL11.glVertex2f;
 import static org.lwjgl.opengl.GL32.GL_DEPTH_CLAMP;
 
 import java.io.IOException;
 
-import org.lwjgl.opengl.Display;
-import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.Color;
 import org.newdawn.slick.opengl.TextureLoader;
 import org.newdawn.slick.util.ResourceLoader;
@@ -23,6 +59,12 @@ public class RenderUtil
 	{
 		if(enabled) glEnable(GL_TEXTURE_2D);
 		else glDisable(GL_TEXTURE_2D);
+	}
+	
+	public static void bindTexture(int tex)
+	{
+		setTextures(true);
+		glBindTexture(GL_TEXTURE_2D, tex);
 	}
 	
 	public static void unbindTextures()
@@ -64,6 +106,7 @@ public class RenderUtil
 	public static void drawRectangle(float x, float y, int sizeX, int sizeY, float red, float green, float blue)
 	{
 		glPushMatrix();
+		setTextures(false);
 		glColor3f(red, green, blue);
 		glBegin(GL_QUADS);
 		glTexCoord2f(0, 0); // top left
@@ -81,6 +124,7 @@ public class RenderUtil
 	public static void drawTriangle(float x, float y, int sizeX, int sizeY, float r, float g, float b, float angle, float rX, float rY, float rZ)
 	{
 		glPushMatrix();
+		setTextures(false);
 		glColor3f(r, g, b);
 		glBegin(GL_QUADS);
 		glTranslatef(1f, 1f, 1f);
@@ -101,6 +145,7 @@ public class RenderUtil
 	public static void drawRectangle(float x, float y, int sizeX, int sizeY, int red, int green, int blue)
 	{
 		glPushMatrix();
+		setTextures(false);
 		new Color(red, green, blue).bind();
 		glBegin(GL_QUADS);
 		glTexCoord2f(0, 0); // top left
@@ -118,6 +163,8 @@ public class RenderUtil
 	public static void drawTexturedRectangle(float x, float y, org.newdawn.slick.opengl.Texture tex)
 	{
 		glPushMatrix();
+		setTextures(true);
+		bindTexture(tex.getTextureID());
 		glBegin(GL_QUADS);
 		glTexCoord2f(0, 0); // top left
 		glVertex2f(x, y);
@@ -133,9 +180,12 @@ public class RenderUtil
 	
 	public static void drawScaledTexturedRectangle(float x, float y, float width, float height, org.newdawn.slick.opengl.Texture tex)
 	{
-		glColor3f(1f, 1f, 1f);
-		glScalef(width, height, 0f);
 		glPushMatrix();
+		setTextures(true);
+		bindTexture(tex.getTextureID());
+		glColor3f(1f, 1f, 1f);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glScalef(width, height, 0f);
 		glBegin(GL_QUADS);
 		glTexCoord2f(0, 0); // top left
 		glVertex2f(x, y);
@@ -149,43 +199,35 @@ public class RenderUtil
 		glPopMatrix();
 	}
 	
+	public static void drawScaledTexturedRectangle(float x, float y, float width, float height, Texture tex)
+	{
+		glPushMatrix();
+		setTextures(true);
+		bindTexture(tex.getID());
+		glColor3f(1f, 1f, 1f);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glScalef(width, height, 0f);
+		glBegin(GL_QUADS);
+		glTexCoord2f(0, 0); // top left
+		glVertex2f(x, y);
+		glTexCoord2f(0, 1); // bottom left 
+		glVertex2f(x, y + tex.getHeight());
+		glTexCoord2f(1, 1); // bottom right
+		glVertex2f(x + tex.getWidth(), y + tex.getHeight());
+		glTexCoord2f(1, 0); // top right
+		glVertex2f(x + tex.getWidth(), y);
+		glEnd();
+		glPopMatrix();
+	}
+	
 	public static org.newdawn.slick.opengl.Texture loadPNG(String name)
 	{
 		try
 		{
 			org.newdawn.slick.opengl.Texture texture = TextureLoader.getTexture("PNG", ResourceLoader.getResourceAsStream("res/" + name));
-			//			consoleMessage("Texture loaded: "+ texture);
-			//			consoleMessage(">> Image width: "+ texture.getImageWidth());
-			//			consoleMessage(">> Image height: "+ texture.getImageHeight());
-			//			consoleMessage(">> Texture width: "+ texture.getTextureWidth());
-			//			consoleMessage(">> Texture height: "+ texture.getTextureHeight());
-			//			consoleMessage(">> Texture ID: "+ texture.getTextureID());
 			return texture;
 		} 
 		catch(IOException e) {}
 		return null;
-	}
-	
-	public static void enable2D()
-	{
-		GL11.glMatrixMode(GL11.GL_PROJECTION);
-		GL11.glPushMatrix();
-		GL11.glLoadIdentity();
-		GL11.glOrtho(0, Display.getDisplayMode().getWidth(),
-				Display.getDisplayMode().getHeight(), 0, -1, 1);
-		GL11.glDisable(GL11.GL_DEPTH_TEST);
-		GL11.glMatrixMode(GL11.GL_MODELVIEW);
-		GL11.glPushMatrix();
-		GL11.glLoadIdentity();
-	}
-
-	public static void disable2D()
-	{
-		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		GL11.glMatrixMode(GL11.GL_PROJECTION);
-		GL11.glPopMatrix();
-		GL11.glMatrixMode(GL11.GL_MODELVIEW);
-		GL11.glPopMatrix();
-		GL11.glLoadIdentity();
 	}
 }

@@ -14,7 +14,7 @@ public class SCP096 extends Entity
 	public static final double TIME_DELAY = 200.0;
 
 	public float viewingAngle = 0.2f;
-	
+
 	private double cryTime = 0;
 	private Vector3f target = null;
 	private double targetInt = 0;
@@ -102,7 +102,7 @@ public class SCP096 extends Entity
 		else if(timeDecimals < 0.75) material.setTexture(animations.get(0));
 		else material.setTexture(animations.get(2));
 	}
-	
+
 	@Override
 	protected void chaseAnim(double timeDecimals)
 	{

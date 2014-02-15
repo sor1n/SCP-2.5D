@@ -2,12 +2,12 @@ package com.base.engine;
 
 public abstract class GUI 
 {
-	public void input()
+	public void input(float delta)
 	{
 		
 	}
 	
-	public void update()
+	public void update(float delta)
 	{
 		
 	}

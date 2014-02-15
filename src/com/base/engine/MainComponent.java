@@ -6,10 +6,10 @@ public class MainComponent
 	public static final int HEIGHT = 600;
 	public static final String TITLE = "SCP - The Escape 2.0";
 	public static final double FRAME_CAP = 5000.0;
-	
+
 	private boolean isRunning;
 	private Game game;
-	
+
 	public MainComponent()
 	{
 		Game.consoleMessage("OpenGL: " + RenderUtil.getOpenGLVersion());
@@ -17,42 +17,42 @@ public class MainComponent
 		isRunning = false;
 		game = new Game();
 	}
-	
+
 	public void start()
 	{
 		if(isRunning) return;
 		run();
 	}
-	
+
 	public void stop()
 	{
 		if(!isRunning) return;
 		isRunning = false;
 	}
-	
+
 	private void run()
 	{
 		isRunning = true;
-		
+
 		int frames = 0;
 		long frameCounter = 0;
-		
+
 		final double frameTime = 1.0 / FRAME_CAP;
-		
+
 		double lastTime = Time.getTime();
 		double unprocessedTime = 0;
-		
+
 		while(isRunning)
 		{
 			boolean render = false;
-			
+
 			double startTime = Time.getTime();
 			double passedTime = startTime - lastTime;
 			lastTime = startTime;
-			
+
 			unprocessedTime += passedTime;
 			frameCounter += passedTime;
-			
+
 			while(unprocessedTime > frameTime)
 			{
 				render = true;
@@ -87,19 +87,20 @@ public class MainComponent
 		}
 		cleanUp();
 	}
-	
+
 	private void render()
 	{
 		RenderUtil.clearScreen();
 		game.render();
+		game.renderGUI();
 		Window.render();
 	}
-	
+
 	private void cleanUp()
 	{
 		Window.dispose();
 	}
-	
+
 	public static void main(String[] args)
 	{
 		Window.createWindow(WIDTH, HEIGHT, TITLE);

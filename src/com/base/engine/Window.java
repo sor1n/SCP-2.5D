@@ -8,6 +8,8 @@ import org.lwjgl.opengl.DisplayMode;
 
 public class Window 
 {
+	public static Vector2f centerPosition = new Vector2f(Window.getWidth()/2, Window.getHeight()/2);
+	
 	public static void createWindow(int width, int height, String title)
 	{
 		Display.setTitle(title);

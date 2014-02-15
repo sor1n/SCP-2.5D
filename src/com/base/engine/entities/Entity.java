@@ -36,7 +36,7 @@ public class Entity
 	protected int ID;
 	public String entityName;
 
-	public int[] rgbValue;
+	protected int[] rgbValue, miniMapColor;
 
 	protected Mesh mesh;
 	protected ArrayList<Texture> animations;
@@ -66,6 +66,7 @@ public class Entity
 		deathTime = 0;
 		state = STATE_IDLE;
 		ID = -1;
+		miniMapColor = new int[]{255, 0, 0};
 	}
 
 	public Entity()
@@ -259,6 +260,11 @@ public class Entity
 	public int[] getRGBValue()
 	{
 		return rgbValue;
+	}
+	
+	public int[] getMinimapColor()
+	{
+		return miniMapColor;
 	}
 
 	public String getEntityName()

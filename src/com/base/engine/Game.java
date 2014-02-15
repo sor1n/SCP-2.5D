@@ -28,6 +28,11 @@ public class Game
 	{
 		if(isRunning) level.render();
 	}
+	
+	public void renderGUI()
+	{
+		if(isRunning) level.renderGUI();
+	}
 
 	public static void setRunning(boolean b)
 	{

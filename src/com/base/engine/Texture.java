@@ -17,30 +17,29 @@ import static org.lwjgl.opengl.GL11.glTexParameterf;
 import static org.lwjgl.opengl.GL11.glTexParameteri;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.nio.ByteBuffer;
 
 import javax.imageio.ImageIO;
 
 public class Texture
 {
-	private int id;
+	private int id, width, height;
+	private String fileName;
+	private boolean outside;
+	private BufferedImage image;
 
 	public Texture(String fileName)
 	{
-		this(loadTexture(fileName));
+		this(fileName, false);
 	}
 	
 	public Texture(String fileName, boolean outside)
 	{
-		this(loadTexture(fileName, outside));
+		this.outside = outside;
+		this.fileName = fileName;
+		id = loadTexture();
 	}
-
-	public Texture(int id)
-	{
-		this.id = id;
-	}
-
+	
 	public void bind()
 	{
 		glBindTexture(GL_TEXTURE_2D, id);
@@ -51,15 +50,19 @@ public class Texture
 		return id;
 	}
 
-	private static int loadTexture(String fileName)
+	private int loadTexture()
 	{
 		//String[] splitArray = fileName.split("\\.");
 		//String ext = splitArray[splitArray.length - 1];
 
 		try
 		{
-			BufferedImage image = ImageIO.read(new File("./res/textures/" + fileName));
-
+			if(outside) image = ImageIO.read(this.getClass().getClassLoader().getResource(fileName));
+			else image = ImageIO.read(this.getClass().getClassLoader().getResource("textures/" + fileName));
+			
+			width = image.getWidth();
+			height = image.getHeight();
+			
 			boolean hasAlpha = image.getColorModel().hasAlpha();
 
 			int[] pixels = image.getRGB(0, 0, image.getWidth(),
@@ -112,15 +115,10 @@ public class Texture
 		return 0;
 	}
 	
-	private static int loadTexture(String fileName, boolean outside)
+	public int flipX()
 	{
-		//String[] splitArray = fileName.split("\\.");
-		//String ext = splitArray[splitArray.length - 1];
-
 		try
 		{
-			BufferedImage image = ImageIO.read(new File("./res/" + fileName));
-
 			boolean hasAlpha = image.getColorModel().hasAlpha();
 
 			int[] pixels = image.getRGB(0, 0, image.getWidth(),
@@ -132,7 +130,7 @@ public class Texture
 			{
 				for (int x = 0; x < image.getWidth(); x++)
 				{
-					int pixel = pixels[y * image.getWidth() + x];
+					int pixel = pixels[(image.getWidth() - x - 1) + y * image.getHeight()];
 
 					buffer.put((byte) ((pixel >> 16) & 0xFF));
 					buffer.put((byte) ((pixel >> 8) & 0xFF));
@@ -171,5 +169,76 @@ public class Texture
 		}
 
 		return 0;
+	}
+	
+	public int flipY()
+	{
+		try
+		{
+			boolean hasAlpha = image.getColorModel().hasAlpha();
+
+			int[] pixels = image.getRGB(0, 0, image.getWidth(),
+					image.getHeight(), null, 0, image.getWidth());
+
+			ByteBuffer buffer = Util.createByteBuffer(image.getWidth() * image.getHeight() * 4);
+
+			for (int y = 0; y < image.getHeight(); y++)
+			{
+				for (int x = 0; x < image.getWidth(); x++)
+				{
+					int pixel = pixels[x + (image.getHeight() - y - 1) * image.getWidth()];
+
+					buffer.put((byte) ((pixel >> 16) & 0xFF));
+					buffer.put((byte) ((pixel >> 8) & 0xFF));
+					buffer.put((byte) ((pixel >> 0) & 0xFF));
+					if (hasAlpha)
+						buffer.put((byte) ((pixel >> 24) & 0xFF));
+					else
+						buffer.put((byte) (0xFF));
+				}
+			}
+
+			buffer.flip();
+
+			//                        this.width = image.getWidth();
+			//                        this.height = image.getHeight();
+			//                        this.id = Engine.getRenderer().createTexture(width, height, buffer, true, true);
+			//                        this.frameBuffer = 0;
+			//                        this.pixels = null;
+
+			int texture = glGenTextures();
+			glBindTexture(GL_TEXTURE_2D, texture);
+
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, image.getWidth(), image.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+
+			return texture;
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+			System.exit(1);
+		}
+
+		return 0;
+	}
+	
+	public int getWidth()
+	{
+		return width;
+	}
+	
+	public int getHeight()
+	{
+		return height;
+	}
+	
+	public void setID(int id)
+	{
+		this.id = id;
 	}
 }
