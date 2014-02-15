@@ -38,6 +38,7 @@ public class SCP096 extends Entity
 		ID = 96;
 		entityName = "SCP-096";
 		rgbValue = new int[]{0xFF0000, 0, 7};
+		miniMapColor = new int[]{255, 233, 163};
 	}
 	
 	public SCP096()
