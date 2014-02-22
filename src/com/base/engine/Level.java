@@ -12,14 +12,17 @@ public class Level
 	public static final float SPOT_LENGTH = 1;
 	public static final float SPOT_HEIGHT = 1;
 	public static final int NUM_TEX_EXP = 4, NUM_TEXTURES = (int)Math.pow(2, NUM_TEX_EXP);
-	public static final float GUN_DISTANCE = 0.07f, GUN_OFFSET = -0.0275f;
-	
+
 	private Mesh mesh;
 	private Bitmap levelFloor, levelWalls, levelObjects;
 	private Shader shader;
 	private Material material;
 	private Transform transform;
 	private Player player;
+	private static MiniMap miniMap;
+	
+	private String lvlName;
+	private TexturePack texPack;
 
 	private List<Door> doors;
 	private List<Entity> monsters;
@@ -29,12 +32,26 @@ public class Level
 
 	private ArrayList<Vector2f> collisionPosStart, collisionPosEnd;
 
-	public Level(String lvlName, String texName)
+	public static Level[] randomLevels = {new Level("Room_Gas", TexturePack.TEX_DEFAULT, false)};
+
+	public Level(String lvlName, TexturePack texture, boolean init)
+	{
+		this.lvlName = lvlName;
+		texPack = texture;
+		if(init) init(texture);
+	}
+	
+	public Level(String lvlName, TexturePack texture)
+	{
+		this(lvlName, texture, true);
+	}
+	
+	private void init(TexturePack texture)
 	{
 		levelFloor = new Bitmap(lvlName + "/" + lvlName + "_Floor.png").flipY();
 		levelWalls = new Bitmap(lvlName + "/" + lvlName + "_Walls.png").flipY();
 		levelObjects = new Bitmap(lvlName + "/" + lvlName + "_Objects.png").flipY();
-		material = new Material(new Texture(texName));
+		material = new Material(texture.getTextureSheet());
 		transform = new Transform();
 		shader = BasicShader.getInstance();
 		generateLevel();
@@ -65,7 +82,7 @@ public class Level
 
 	public void input(float delta)
 	{
-		player.input(delta);
+		if(player != null) player.input(delta);
 	}
 
 	public void update(float delta)
@@ -74,7 +91,8 @@ public class Level
 		for(Particle particle : getParticles()) particle.update(delta);
 		for(Entity monster : getMonsters()) monster.update(delta);
 		for(Medkit med : getMedkits()) med.update(delta);
-		player.update(delta);
+		if(player != null) player.update(delta);
+		if(miniMap != null) miniMap.update(delta);
 	}
 
 	public void render()
@@ -86,15 +104,16 @@ public class Level
 		for(Particle particle : getParticles()) particle.render();
 		for(Entity monster : getMonsters()) monster.render();
 		for(Medkit med : getMedkits()) med.render();
-		player.render();
+		if(player != null) player.render();
 	}
-	
+
 	public void renderGUI()
 	{
 		shader.unbind();
 		RenderUtil.unbindTextures();
 		RenderUtil.setTextures(true);
-		player.renderGUI();
+		if(player != null) player.renderGUI();
+		if(miniMap != null) miniMap.render();
 	}
 
 	private void addFace(ArrayList<Integer> indices, int startLocation, boolean dir)
@@ -194,7 +213,14 @@ public class Level
 	private void addSpecial(int red, int green, int blue, int x, int y)
 	{
 		if(blue == 1) addDoor(x, y);
-		else if(blue == 2) player = new Player(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0.4378f, (y + 0.5f) * SPOT_LENGTH), this);
+		else if(blue == 2)
+		{
+			player = new Player(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0.4378f, (y + 0.5f) * SPOT_LENGTH));
+			Transform.setProjection(70, Window.getWidth(), Window.getHeight(), 0.01f, 1000f);
+			Transform.setCamera(player.getCamera());
+			if(miniMap == null) miniMap = new MiniMap(this);
+			else miniMap.addMapPart(this);
+		}
 		else if(blue == 4) getMedkits().add(new Medkit(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0, (y + 0.5f) * SPOT_LENGTH)));
 		else if(blue == 5) getExitPoints().add(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0, (y + 0.5f) * SPOT_LENGTH));
 		else if(blue > 5)
@@ -516,21 +542,61 @@ public class Level
 
 	public int getCoord(int i, int j)
 	{
-		return levelFloor.getPixel(i, j);
+		return levelFloor.getPixel(i / (int)SPOT_WIDTH, j / (int)SPOT_HEIGHT);
 	}
 
 	public boolean isAir(int x, int y)
 	{
-		return (getCoord(x, y) & 0xFFFFFF) == 0;
+		return isID(x, y, 0);
 	}
 
 	public boolean isDoor(int x, int y)
 	{
-		return (getCoord(x, y) & 0x0000FF) == 1;
+		return isBlueID(x, y, 1);
+	}
+	
+	public boolean isBlueID(int x, int y, int id)
+	{
+		return (getCoord(x, y) & 0x0000FF) == id;
+	}
+	
+	public boolean isRedID(int x, int y, int id)
+	{
+		return (getCoord(x, y) & 0xFF0000) == id;
+	}
+	
+	public boolean isGreenID(int x, int y, int id)
+	{
+		return (getCoord(x, y) & 0x00FF00) == id;
+	}
+	
+	public boolean isID(int x, int y, int id)
+	{
+		return (getCoord(x, y) & 0xFFFFFF) == id;
 	}
 
 	public String getLevelMap()
 	{
 		return levelFloor.getPath();
+	}
+	
+	public String getObjectsMap()
+	{
+		return levelObjects.getPath();
+	}
+	
+	public String getLevelName()
+	{
+		return lvlName;
+	}
+	
+	public TexturePack getTexturePack()
+	{
+		return texPack;
+	}
+	
+	public static MiniMap getMap()
+	{
+		return miniMap;
 	}
 }

@@ -18,18 +18,18 @@ public class Player
 	private Camera camera;
 	private Random rand;
 	private int health;
-	private MiniMap miniMap;
+	//private MiniMap miniMap;
 
 	private static boolean mouseLocked = false;
 	private Vector3f movementVector;
 
-	public Player(Vector3f pos, Level level)
+	public Player(Vector3f pos/*, Level level*/)
 	{
 		camera = new Camera(pos, new Vector3f(0, 0, 1), new Vector3f(0, 1, 0));
 		rand = new Random();
 		health = MAX_HEALTH;
 		movementVector = Vector3f.ZERO;
-		miniMap = new MiniMap(level);
+//		miniMap = new MiniMap(level);
 	}
 
 	public int getDamage()
@@ -39,16 +39,7 @@ public class Player
 
 	public void input(float delta)
 	{
-		if(Input.getKeyDown(Input.KEY_E))
-		{
-			Game.getLevel().openDoors(camera.getPos(), true);
-			//			int posX = (int)camera.getPos().getX();
-			//			int posZ = (int)camera.getPos().getZ();
-			//			new Map(new Vector3f(((int)(posX) - (Level.SPOT_WIDTH / 2)), 0, (int)(posZ) - 0.01f), 0, Game.getLevel()).spawn(Game.getLevel());
-			//			new Map(new Vector3f(((int)(posX) + 0.01f), 0, (int)(posZ) + (Level.SPOT_LENGTH / 2)), 1, Game.getLevel()).spawn(Game.getLevel());
-			//			new Map(new Vector3f(((int)(posX) - (Level.SPOT_WIDTH / 2)), 0, (int)(posZ) + 0.01f + Level.SPOT_LENGTH), 2, Game.getLevel()).spawn(Game.getLevel());
-			//			new Map(new Vector3f(((int)(posX) - 0.01f - Level.SPOT_WIDTH), 0, (int)(posZ) + (Level.SPOT_LENGTH / 2)), 3, Game.getLevel()).spawn(Game.getLevel());
-		}
+		if(Input.getKeyDown(Input.KEY_E)) Game.getLevel().openDoors(camera.getPos(), true);
 
 		if(Input.getKey(Input.KEY_ESCAPE))
 		{
@@ -99,7 +90,7 @@ public class Player
 
 	public void update(float delta)
 	{
-		miniMap.update(delta);
+		//miniMap.update(delta);
 
 		float movAmt = (float)(MOVE_SPEED * delta);
 		movementVector.setY(0);
@@ -120,7 +111,7 @@ public class Player
 	
 	public void renderGUI()
 	{
-		miniMap.render();
+		//miniMap.render();
 	}
 
 	public Camera getCamera()

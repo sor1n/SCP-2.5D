@@ -5,7 +5,7 @@ public class Vector2f
 	private float x;
 	private float y;
 	
-	public static final Vector2f ZERO = new Vector2f(0, 0), ONE = new Vector2f(1, 1);
+	public static final Vector2f ZERO = new Vector2f(0, 0), ONE = new Vector2f(1, 1), NEG = new Vector2f(-1, -1);
 	
 	public Vector2f(float x, float y)
 	{

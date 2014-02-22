@@ -7,31 +7,31 @@ public class Game
 	private static Level level;
 	private static boolean isRunning;
 	public static int levelNum = 0;
-	public static int roomSize = 2;
 
 	public Game()
 	{
 		nextLevel();
+		isRunning = true;
 	}
 
 	public void input(float delta)
 	{
-		level.input(delta);
+		if(isRunning && level != null) level.input(delta);
 	}
 
 	public void update(float delta)
 	{
-		if(isRunning) level.update(delta);
+		if(isRunning && level != null) level.update(delta);
 	}
 
 	public void render()
 	{
-		if(isRunning) level.render();
+		if(isRunning && level != null) level.render();
 	}
 	
 	public void renderGUI()
 	{
-		if(isRunning) level.renderGUI();
+		if(isRunning && level != null) level.renderGUI();
 	}
 
 	public static void setRunning(boolean b)
@@ -47,24 +47,32 @@ public class Game
 	public static void nextLevel()
 	{
 		levelNum++;
-		//level = new Level("level" + levelNum + ".png", "WolfCollection.png");
 		switch(levelNum)
 		{
 		case 1:
-			level = new Level("Room_Begin", "WolfCollection.png");
+			level = new Level("Room_Begin", TexturePack.TEX_DEFAULT);
 			break;
 		default:
-			int i = new Random().nextInt(roomSize) + 1;
-			level = new Level("Room_" + i + ".png", "WolfCollection.png");
+			int i = new Random().nextInt(Level.randomLevels.length);
+			level = new Level(Level.randomLevels[i].getLevelName(), Level.randomLevels[i].getTexturePack(), true);
 			break;
 		}
-		Transform.setProjection(70, Window.getWidth(), Window.getHeight(), 0.01f, 1000f);
-		Transform.setCamera(level.getPlayer().getCamera());
-		isRunning = true;
 	}
 
 	public static <T> void consoleMessage(T txt)
 	{
 		System.out.println("[SCP]: " + String.valueOf(txt));
+	}
+	
+	public static <T> void consoleError(T txt)
+	{
+		System.err.println("[SCP]: " + String.valueOf(txt));
+	}
+	
+	public static void crashGame(String text)
+	{
+		consoleError(text);
+		Window.dispose();
+		System.exit(1);
 	}
 }
