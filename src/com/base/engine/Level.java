@@ -8,9 +8,14 @@ import com.base.engine.entities.Entity;
 
 public class Level 
 {
+	private static List<Level> levels = new CopyOnWriteArrayList<Level>();
+	private static List<ExitPoint> path = new ArrayList<ExitPoint>();
+	private static int pathIndex = 0;
+
 	public static final float SPOT_WIDTH = 1;
 	public static final float SPOT_LENGTH = 1;
 	public static final float SPOT_HEIGHT = 1;
+	public static final float PLAYER_HEIGHT = 0.4378f;
 	public static final int NUM_TEX_EXP = 4, NUM_TEXTURES = (int)Math.pow(2, NUM_TEX_EXP);
 
 	private Mesh mesh;
@@ -20,19 +25,19 @@ public class Level
 	private Transform transform;
 	private Player player;
 	private static MiniMap miniMap;
-	
+
+	private static boolean playerSpawn = false;
+
 	private String lvlName;
 	private TexturePack texPack;
 
 	private List<Door> doors;
 	private List<Entity> monsters;
 	private List<Medkit> medkits;
-	private List<Vector3f> exitPoints;
+	private List<ExitPoint> exitPoints;
 	private List<Particle> particles;
 
 	private ArrayList<Vector2f> collisionPosStart, collisionPosEnd;
-
-	public static Level[] randomLevels = {new Level("Room_Gas", TexturePack.TEX_DEFAULT, false)};
 
 	public Level(String lvlName, TexturePack texture, boolean init)
 	{
@@ -40,12 +45,12 @@ public class Level
 		texPack = texture;
 		if(init) init(texture);
 	}
-	
+
 	public Level(String lvlName, TexturePack texture)
 	{
 		this(lvlName, texture, true);
 	}
-	
+
 	private void init(TexturePack texture)
 	{
 		levelFloor = new Bitmap(lvlName + "/" + lvlName + "_Floor.png").flipY();
@@ -55,6 +60,27 @@ public class Level
 		transform = new Transform();
 		shader = BasicShader.getInstance();
 		generateLevel();
+		getLevels().add(this);
+		List<String> lvlNames = new CopyOnWriteArrayList<String>();
+		for(Level str : getLevels()) lvlNames.add(str.getLevelName());
+//		int i = new Random().nextInt();
+//		Game.consoleIterator(lvlNames, i);
+		if(playerSpawn && player == null)
+		{
+			Level prevLevel = getLevels().get(pathIndex - 1);
+			if(prevLevel == null) return;
+			for(ExitPoint exit : getExitPoints())
+				for(ExitPoint points : prevLevel.getExitPoints())
+				{
+					if(exit.getLevel() == points.getLevel())
+					{
+						Vector3f solid = findSolidPlace(exit.getExitPoint().getXZ().toInt());
+						spawnPlayer(new Vector3f((solid.getX() + 0.5f) * SPOT_WIDTH, PLAYER_HEIGHT, (solid.getZ() + 0.5f) * SPOT_LENGTH), points, exit);
+						break;
+					}
+				}
+		}
+		pathIndex++;
 	}
 
 	public void openDoors(Vector3f pos, boolean exit)
@@ -65,9 +91,14 @@ public class Level
 		}
 		if(exit)
 		{
-			for(Vector3f eP : getExitPoints())
+			for(ExitPoint eP : getExitPoints())
 			{
-				if(eP.sub(pos).length() < Door.OPEN_DISTANCE) Game.nextLevel();
+				if(eP.getExitPoint().sub(pos).length() < Door.OPEN_DISTANCE)
+				{
+					if(eP.getLevel() == Game.levelNum) Game.nextLevel(eP.getLevel() - 1);
+					else Game.nextLevel(eP.getLevel());
+					path.add(eP);
+				}
 			}
 		}
 	}
@@ -82,6 +113,7 @@ public class Level
 
 	public void input(float delta)
 	{
+//		Game.consoleError(Game.levelNum);
 		if(player != null) player.input(delta);
 	}
 
@@ -173,12 +205,7 @@ public class Level
 			vertices.add(new Vertex(new Vector3f((i + 1) * SPOT_WIDTH, (j + 1) * SPOT_HEIGHT, offset * SPOT_LENGTH), new Vector2f(texCoords[0], texCoords[2])));
 			vertices.add(new Vertex(new Vector3f(i * SPOT_WIDTH, (j + 1) * SPOT_HEIGHT, offset * SPOT_LENGTH), new Vector2f(texCoords[1], texCoords[2])));
 		}
-		else 
-		{
-			System.err.println("Invalid plane used in level generator.");
-			new Exception().printStackTrace();
-			System.exit(1);
-		}
+		else Game.crashGame("Invalid plane used in level generator.");
 	}
 
 	private void addDoor(int x, int y)
@@ -209,21 +236,14 @@ public class Level
 		getDoors().add(new Door(doorTrans, material, openPosition));
 	}
 
-	//FIXME
+	//FIXME: Specials
 	private void addSpecial(int red, int green, int blue, int x, int y)
 	{
-		if(blue == 1) addDoor(x, y);
-		else if(blue == 2)
-		{
-			player = new Player(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0.4378f, (y + 0.5f) * SPOT_LENGTH));
-			Transform.setProjection(70, Window.getWidth(), Window.getHeight(), 0.01f, 1000f);
-			Transform.setCamera(player.getCamera());
-			if(miniMap == null) miniMap = new MiniMap(this);
-			else miniMap.addMapPart(this);
-		}
-		else if(blue == 4) getMedkits().add(new Medkit(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0, (y + 0.5f) * SPOT_LENGTH)));
-		else if(blue == 5) getExitPoints().add(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0, (y + 0.5f) * SPOT_LENGTH));
-		else if(blue > 5)
+		if(blue == RGB.DOOR_BLUE) addDoor(x, y);
+		else if(blue == RGB.PLAYER_BLUE && !playerSpawn) spawnPlayer(new Vector3f((x + 0.5f) * SPOT_WIDTH, PLAYER_HEIGHT, (y + 0.5f) * SPOT_LENGTH));
+		else if(blue == RGB.MEDKIT_BLUE) getMedkits().add(new Medkit(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0, (y + 0.5f) * SPOT_LENGTH)));
+		else if(blue == RGB.EXIT_BLUE) getExitPoints().add(new ExitPoint(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0, (y + 0.5f) * SPOT_LENGTH), green / 256));
+		else if(blue >= RGB.ENTITY_MIN)
 		{
 			for(int i = 0; i < Entity.monsters.length; i++)
 			{
@@ -243,12 +263,13 @@ public class Level
 		}
 	}
 
+	//FIXME: Generation
 	private void generateLevel()
 	{
 		doors = new CopyOnWriteArrayList<Door>();
 		monsters = new CopyOnWriteArrayList<Entity>();
 		medkits = new CopyOnWriteArrayList<Medkit>();
-		exitPoints = new CopyOnWriteArrayList<Vector3f>();
+		exitPoints = new CopyOnWriteArrayList<ExitPoint>();
 		particles = new CopyOnWriteArrayList<Particle>();
 		collisionPosStart = new ArrayList<Vector2f>();
 		collisionPosEnd = new ArrayList<Vector2f>();
@@ -530,7 +551,7 @@ public class Level
 		return medkits;
 	}
 
-	public synchronized List<Vector3f> getExitPoints()
+	public synchronized List<ExitPoint> getExitPoints()
 	{
 		return exitPoints;
 	}
@@ -554,22 +575,22 @@ public class Level
 	{
 		return isBlueID(x, y, 1);
 	}
-	
+
 	public boolean isBlueID(int x, int y, int id)
 	{
 		return (getCoord(x, y) & 0x0000FF) == id;
 	}
-	
+
 	public boolean isRedID(int x, int y, int id)
 	{
 		return (getCoord(x, y) & 0xFF0000) == id;
 	}
-	
+
 	public boolean isGreenID(int x, int y, int id)
 	{
 		return (getCoord(x, y) & 0x00FF00) == id;
 	}
-	
+
 	public boolean isID(int x, int y, int id)
 	{
 		return (getCoord(x, y) & 0xFFFFFF) == id;
@@ -579,24 +600,98 @@ public class Level
 	{
 		return levelFloor.getPath();
 	}
-	
+
 	public String getObjectsMap()
 	{
 		return levelObjects.getPath();
 	}
-	
+
 	public String getLevelName()
 	{
 		return lvlName;
 	}
-	
+
 	public TexturePack getTexturePack()
 	{
 		return texPack;
 	}
-	
+
 	public static MiniMap getMap()
 	{
 		return miniMap;
+	}
+
+	public static synchronized List<Level> getLevels()
+	{
+		return levels;
+	}
+
+	public Vector3f findSolidPlace(Vector2i vec)
+	{
+		int number = 0;
+		if(!isAir(vec.getX(), vec.getY())) return new Vector3f(vec.getX(), 0, vec.getY());
+		number++;
+		for(int i = -number; i < number; i++)
+			for(int j = -number; j < number; j++)
+			{
+				if(!isAir(vec.getX() + i, vec.getY() + j)) return new Vector3f(vec.getX() + i, 0, vec.getY() + j);
+			}
+		return findSolidPlace(vec, number + 1);
+	}
+
+	private Vector3f findSolidPlace(Vector2i vec, int number)
+	{
+		for(int i = -number; i < number; i++)
+			for(int j = -number; j < number; j++)
+			{
+				if(!isAir(vec.getX() + i, vec.getY() + j)) return new Vector3f(vec.getX() + i, 0, vec.getY() + j);
+			}
+		if(number < 8) return findSolidPlace(vec, number + 1);
+		else return new Vector3f(vec.getX(), 0, vec.getY());
+	}
+
+	private void spawnPlayer(Vector3f vec)
+	{
+		player = new Player(vec);
+		Transform.setProjection(70, Window.getWidth(), Window.getHeight(), 0.01f, 1000f);
+		Transform.setCamera(player.getCamera());
+		if(miniMap == null) miniMap = new MiniMap(this);
+		playerSpawn = true;
+	}
+	
+	private void spawnPlayer(Vector3f vec, ExitPoint oldP, ExitPoint newP)
+	{
+		Vector3f forw = Transform.getCamera().getForward();
+		Vector3f up = Transform.getCamera().getUp();
+		player = new Player(vec);
+		Transform.setProjection(70, Window.getWidth(), Window.getHeight(), 0.01f, 1000f);
+		Transform.setCamera(player.getCamera());
+		Transform.getCamera().setForward(forw);
+		Transform.getCamera().setUp(up);
+		miniMap.addMapPart(this, oldP, newP);
+		playerSpawn = true;
+	}
+
+	public static boolean doesLevelExist(int i)
+	{
+		try
+		{
+			new Bitmap("Room_" + i + "/Room_" + i + "_Floor.png");
+			return true;
+		}
+		catch(Exception e)
+		{
+			return false;
+		}
+	}
+	
+	public static List<ExitPoint> getCurrentPath()
+	{
+		return path;
+	}
+	
+	public static int getCurrentPathIndex()
+	{
+		return pathIndex;
 	}
 }

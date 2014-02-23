@@ -1,6 +1,7 @@
 package com.base.engine;
 
-import java.util.Random;
+import java.util.Iterator;
+import java.util.List;
 
 public class Game 
 {
@@ -10,7 +11,7 @@ public class Game
 
 	public Game()
 	{
-		nextLevel();
+		nextLevel(0);
 		isRunning = true;
 	}
 
@@ -44,20 +45,28 @@ public class Game
 		return level;
 	}
 
-	public static void nextLevel()
+	public static void nextLevel(int lvl)
 	{
-		levelNum++;
-		switch(levelNum)
-		{
-		case 1:
-			level = new Level("Room_Begin", TexturePack.TEX_DEFAULT);
-			break;
-		default:
-			int i = new Random().nextInt(Level.randomLevels.length);
-			level = new Level(Level.randomLevels[i].getLevelName(), Level.randomLevels[i].getTexturePack(), true);
-			break;
-		}
+		if(lvl < 0) lvl = 0;
+		levelNum = lvl;
+//		switch(levelNum)
+//		{
+//		case 1:
+//			level = new Level("Room_Begin", TexturePack.TEX_DEFAULT);
+//			break;
+//		default:
+//			int i = new Random().nextInt(Level.randomLevels.length);
+//			level = new Level(Level.randomLevels[i].getLevelName(), Level.randomLevels[i].getTexturePack(), true);
+//			break;
+//		}
+		if(Level.doesLevelExist(lvl)) level = new Level("Room_" + lvl, TexturePack.TEX_DEFAULT);
 	}
+	
+//	public static void prevLevel(int lvl)
+//	{
+//		//levelNum--;
+//		level = new Level(Level.levels.get(lvl).getLevelName(), Level.levels.get(lvl).getTexturePack());
+//	}
 
 	public static <T> void consoleMessage(T txt)
 	{
@@ -67,6 +76,18 @@ public class Game
 	public static <T> void consoleError(T txt)
 	{
 		System.err.println("[SCP]: " + String.valueOf(txt));
+	}
+	
+	public static <T> void consoleIterator(List<?> txt)
+	{
+		Iterator<?> iterator = txt.iterator();
+		while(iterator.hasNext()) System.out.println("[SCP]: " + String.valueOf(iterator.next()));
+	}
+	
+	public static <T> void consoleIterator(List<?> txt, T extraText)
+	{
+		Iterator<?> iterator = txt.iterator();
+		while(iterator.hasNext()) System.out.println("[SCP]: " + String.valueOf(iterator.next() + " | " + extraText));
 	}
 	
 	public static void crashGame(String text)

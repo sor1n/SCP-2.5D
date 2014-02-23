@@ -128,4 +128,9 @@ public class Vector2f
 	{
 		return new Vector3f(a.getX(), a.getY(), 0);
 	}
+	
+	public Vector2i toInt()
+	{
+		return new Vector2i((int)x, (int)y);
+	}
 }

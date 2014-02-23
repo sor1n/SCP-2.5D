@@ -58,7 +58,7 @@ public class MTF extends Entity
 		deathTime = 0;
 		state = STATE_IDLE;
 		ID = -1;
-		rgbValue = new int[]{0, 0, 8};
+		rgbValue = new int[]{0, 0, 22};
 		entityName = "MTF";
 	}
 	

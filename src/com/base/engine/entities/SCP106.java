@@ -25,7 +25,7 @@ public class SCP106 extends Entity
 		canPassThroughWalls = true;
 		ID = 106;
 		entityName = "SCP-106";
-		rgbValue = new int[]{0xFF0000, 0, 6};
+		rgbValue = new int[]{0xFF0000, 0, 20};
 		miniMapColor = new int[]{114, 102, 63};
 	}
 	

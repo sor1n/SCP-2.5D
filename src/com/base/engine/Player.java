@@ -127,7 +127,7 @@ public class Player
 		if(health <= 0)
 		{
 			Game.setRunning(false);
-			System.out.println("Game over.");
+			Game.consoleMessage("Game over.");
 		}
 	}
 
