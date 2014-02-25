@@ -13,32 +13,30 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
-
 import com.base.engine.entities.Entity;
 
 public class MiniMap extends GUI
 {
 	private List<Level> levels;
 
-	public static final int MAP_SIZE = 1000;
+	public static final int MAP_SIZE = 500;
 	public static final int MAP_OFFSET = MAP_SIZE / 2;
 
 	private Texture tex;
 	private Level level;
 	private float x, y;
 	private float scaleX = 4.5f, scaleY = scaleX;
-	private int borderSize = 6;
+	private int borderSize = 8;
 	private Vector2f playerPos;
 	private boolean showEnemies = true;
-	private int size = 32;
+	private final int size = 32;
 	private int[] pix;
 
 	public MiniMap(Level level)
 	{
 		levels = new ArrayList<Level>();
-		this.x = Window.getWidth() / scaleX - size - (borderSize / 2);
-		this.y = Window.getHeight() / scaleY - size - (borderSize / 2);
+		x = Window.getWidth() / scaleX - size - (borderSize / 2);
+		y = Window.getHeight() / scaleY - size - (borderSize / 2);
 		tex = new Texture(MAP_SIZE, MAP_SIZE);
 		pix = new int[MAP_SIZE * MAP_SIZE];
 		addMapPart(level, null, null);
@@ -75,6 +73,7 @@ public class MiniMap extends GUI
 			}
 		}
 		RenderUtil.drawScaledTexturedRectangle(x - playerPos.getX()/* - oldPlayerPos.getX()*/ + 16, y - playerPos.getY()/* - oldPlayerPos.getY()*/ + 16, scaleX, scaleY, tex);
+//		for(Room room : rooms) RenderUtil.drawScaledTexturedRectangle(x - playerPos.getX() + room.getPosition().getX()/* - oldPlayerPos.getX()*/ + 16 + MAP_OFFSET, y - playerPos.getY() + room.getPosition().getY() + MAP_OFFSET/* - oldPlayerPos.getY()*/ + 16, scaleX, scaleY, room.getTexture());
 		glScissor((int)(x * scaleX), (int)(y * scaleY), (int)(size * scaleX), (int)(size * scaleY));
 		glDisable(GL_SCISSOR_TEST);
 		glPopMatrix();
@@ -137,12 +136,13 @@ public class MiniMap extends GUI
 		{
 			Texture map = new Texture(levels.get(i).getLevelMap(), true);
 			map.setID(map.flipY());
-			addMap(map);
+			if(isCurrentLevel(map)) addMap(map);
+//			else if(Level.getCurrentPath().size() > 1) addMap(map, calcOffset(Level.getCurrentExitPoint(), Level.getCurrentPath().get(Level.getCurrentPath().size() - 2)));
 		}
 		tex.setID(tex.setPixels(pix, MAP_SIZE));
 	}
 
-	private Vector2i calcOffset(ExitPoint oldPoint, ExitPoint newPoint)
+	public Vector2i calcOffset(ExitPoint oldPoint, ExitPoint newPoint)
 	{
 		Vector2i oldDoor = oldPoint.getExitPoint().getXZ().toInt();
 		Vector2i newDoor = newPoint.getExitPoint().getXZ().toInt();
@@ -154,5 +154,10 @@ public class MiniMap extends GUI
 		Arrays.fill(pix, 0x000000);
 		for(int x = 0; x < MAP_SIZE; x++)
 			for(int y = 0; y < MAP_SIZE; y++) if(x == 0 || x == MAP_SIZE - 1 || y == 0 || y == MAP_SIZE - 1) setPixel(pix, x, y, MAP_SIZE, MAP_SIZE, 0xFF0000);
+	}
+
+	private boolean isCurrentLevel(Texture text)
+	{
+		return (level.getLevelMap().equalsIgnoreCase(text.getFileName()));
 	}
 }

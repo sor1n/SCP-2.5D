@@ -49,25 +49,9 @@ public class Game
 	{
 		if(lvl < 0) lvl = 0;
 		levelNum = lvl;
-//		switch(levelNum)
-//		{
-//		case 1:
-//			level = new Level("Room_Begin", TexturePack.TEX_DEFAULT);
-//			break;
-//		default:
-//			int i = new Random().nextInt(Level.randomLevels.length);
-//			level = new Level(Level.randomLevels[i].getLevelName(), Level.randomLevels[i].getTexturePack(), true);
-//			break;
-//		}
 		if(Level.doesLevelExist(lvl)) level = new Level("Room_" + lvl, TexturePack.TEX_DEFAULT);
 	}
 	
-//	public static void prevLevel(int lvl)
-//	{
-//		//levelNum--;
-//		level = new Level(Level.levels.get(lvl).getLevelName(), Level.levels.get(lvl).getTexturePack());
-//	}
-
 	public static <T> void consoleMessage(T txt)
 	{
 		System.out.println("[SCP]: " + String.valueOf(txt));
@@ -93,7 +77,7 @@ public class Game
 	public static void crashGame(String text)
 	{
 		consoleError(text);
-		Window.dispose();
+		new Exception().printStackTrace();
 		System.exit(1);
 	}
 }

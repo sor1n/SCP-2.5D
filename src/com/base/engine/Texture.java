@@ -318,4 +318,14 @@ public class Texture
 	{
 		return pixels;
 	}
+	
+	public void setPixels(int[] pix)
+	{
+		pixels = pix;
+	}
+	
+	public String getFileName()
+	{
+		return fileName;
+	}
 }

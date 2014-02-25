@@ -14,22 +14,20 @@ public class Player
 	public static final float PLAYER_SIZE = 0.2f, SHOOT_DISTANCE = 1000f, GUN_DISTANCE = 0.105f, GUN_OFFSET = -0.0775f;
 	public static final int DAMAGE_MIN = 20, DAMAGE_MAX = 60;
 	public static final int MAX_HEALTH = 100;
-
+	
 	private Camera camera;
 	private Random rand;
 	private int health;
-	//private MiniMap miniMap;
 
 	private static boolean mouseLocked = false;
 	private Vector3f movementVector;
-
-	public Player(Vector3f pos/*, Level level*/)
+	
+	public Player(Vector3f pos)
 	{
 		camera = new Camera(pos, new Vector3f(0, 0, 1), new Vector3f(0, 1, 0));
 		rand = new Random();
 		health = MAX_HEALTH;
 		movementVector = Vector3f.ZERO;
-//		miniMap = new MiniMap(level);
 	}
 
 	public int getDamage()
@@ -40,7 +38,7 @@ public class Player
 	public void input(float delta)
 	{
 		if(Input.getKeyDown(Input.KEY_E)) Game.getLevel().openDoors(camera.getPos(), true);
-
+		
 		if(Input.getKey(Input.KEY_ESCAPE))
 		{
 			Input.setCursor(true);
@@ -66,13 +64,9 @@ public class Player
 		movementVector = Vector3f.ZERO;
 
 		if(Input.getKey(Input.KEY_W)) movementVector = movementVector.add(camera.getForward());
-		//camera.move(camera.getForward(), movAmt);
 		if(Input.getKey(Input.KEY_S)) movementVector = movementVector.sub(camera.getForward());
-		//camera.move(camera.getForward(), -movAmt);
 		if(Input.getKey(Input.KEY_A)) movementVector = movementVector.add(camera.getLeft());
-		//camera.move(camera.getLeft(), movAmt);
 		if(Input.getKey(Input.KEY_D)) movementVector = movementVector.add(camera.getRight());
-		//camera.move(camera.getRight(), movAmt);
 
 		if(mouseLocked)
 		{
@@ -90,10 +84,8 @@ public class Player
 
 	public void update(float delta)
 	{
-		//miniMap.update(delta);
-
 		float movAmt = (float)(MOVE_SPEED * delta);
-		movementVector.setY(0);
+		movementVector.setY(0); //FIXME: Y Dimension shiz
 		if(movementVector.length() > 0) movementVector = movementVector.normalized();
 
 		Vector3f oldPosition = camera.getPos();

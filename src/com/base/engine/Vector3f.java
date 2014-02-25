@@ -153,6 +153,21 @@ public class Vector3f
 	{
 		this.y = y;
 	}
+	
+	public void addX(float x)
+	{
+		this.x += x;
+	}
+	
+	public void addY(float y)
+	{
+		this.y += y;
+	}
+	
+	public void addZ(float z)
+	{
+		this.z += z;
+	}
 
 	public float getZ() 
 	{

@@ -2,6 +2,8 @@ package com.base.engine;
 
 public class Transform
 {
+	public static final Transform ZERO = new Transform(Vector3f.ZERO, Vector3f.ZERO, Vector3f.ZERO), ONE = new Transform(Vector3f.ONE, Vector3f.ONE, Vector3f.ONE);
+	
 	private static Camera camera;
 	
 	private static float zNear;

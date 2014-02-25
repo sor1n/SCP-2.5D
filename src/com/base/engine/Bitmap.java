@@ -96,4 +96,9 @@ public class Bitmap
 	{
 		return fileName;
 	}
+	
+	public Texture toTexture()
+	{
+		return new Texture(path, true);
+	}
 }

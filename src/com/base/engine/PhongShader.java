@@ -106,25 +106,13 @@ public class PhongShader extends Shader
 	
 	public static void setPointLight(PointLight[] pointLights)
 	{
-		if(pointLights.length > MAX_POINT_LIGHTS)
-		{
-			System.err.println("Error: You passed in too many point lights. Max allowed is " + MAX_POINT_LIGHTS + ", you passed in " + pointLights.length);
-			new Exception().printStackTrace();
-			System.exit(1);
-		}
-		
+		if(pointLights.length > MAX_POINT_LIGHTS) Game.crashGame("Error: You passed in too many point lights. Max allowed is " + MAX_POINT_LIGHTS + ", you passed in " + pointLights.length);
 		PhongShader.pointLights = pointLights;
 	}
 	
 	public static void setSpotLights(SpotLight[] spotLights)
 	{
-		if(spotLights.length > MAX_SPOT_LIGHTS)
-		{
-			System.err.println("Error: You passed in too many spot lights. Max allowed is " + MAX_SPOT_LIGHTS + ", you passed in " + spotLights.length);
-			new Exception().printStackTrace();
-			System.exit(1);
-		}
-		
+		if(spotLights.length > MAX_SPOT_LIGHTS) Game.crashGame("Error: You passed in too many spot lights. Max allowed is " + MAX_SPOT_LIGHTS + ", you passed in " + spotLights.length);
 		PhongShader.spotLights = spotLights;
 	}
 	

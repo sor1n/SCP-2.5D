@@ -2,6 +2,7 @@ package com.base.engine;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.base.engine.entities.Entity;
@@ -10,7 +11,6 @@ public class Level
 {
 	private static List<Level> levels = new CopyOnWriteArrayList<Level>();
 	private static List<ExitPoint> path = new ArrayList<ExitPoint>();
-	private static int pathIndex = 0;
 
 	public static final float SPOT_WIDTH = 1;
 	public static final float SPOT_LENGTH = 1;
@@ -18,13 +18,14 @@ public class Level
 	public static final float PLAYER_HEIGHT = 0.4378f;
 	public static final int NUM_TEX_EXP = 4, NUM_TEXTURES = (int)Math.pow(2, NUM_TEX_EXP);
 
+	private static MiniMap miniMap;
 	private Mesh mesh;
 	private Bitmap levelFloor, levelWalls, levelObjects;
 	private Shader shader;
 	private Material material;
 	private Transform transform;
 	private Player player;
-	private static MiniMap miniMap;
+	private int levelID;
 
 	private static boolean playerSpawn = false;
 
@@ -38,9 +39,10 @@ public class Level
 	private List<Particle> particles;
 
 	private ArrayList<Vector2f> collisionPosStart, collisionPosEnd;
-
+	
 	public Level(String lvlName, TexturePack texture, boolean init)
 	{
+		levelID = new Random().nextInt();
 		this.lvlName = lvlName;
 		texPack = texture;
 		if(init) init(texture);
@@ -58,16 +60,15 @@ public class Level
 		levelObjects = new Bitmap(lvlName + "/" + lvlName + "_Objects.png").flipY();
 		material = new Material(texture.getTextureSheet());
 		transform = new Transform();
-		shader = BasicShader.getInstance();
+		shader = PhongShader.getInstance();
 		generateLevel();
+		
+		PhongShader.setAmbientLight(new Vector3f(.8f, .8f, .8f));
+		
 		getLevels().add(this);
-		List<String> lvlNames = new CopyOnWriteArrayList<String>();
-		for(Level str : getLevels()) lvlNames.add(str.getLevelName());
-//		int i = new Random().nextInt();
-//		Game.consoleIterator(lvlNames, i);
 		if(playerSpawn && player == null)
 		{
-			Level prevLevel = getLevels().get(pathIndex - 1);
+			Level prevLevel = getLevels().get(path.size() - 1);
 			if(prevLevel == null) return;
 			for(ExitPoint exit : getExitPoints())
 				for(ExitPoint points : prevLevel.getExitPoints())
@@ -80,7 +81,7 @@ public class Level
 					}
 				}
 		}
-		pathIndex++;
+		//		pathIndex++;
 	}
 
 	public void openDoors(Vector3f pos, boolean exit)
@@ -95,9 +96,9 @@ public class Level
 			{
 				if(eP.getExitPoint().sub(pos).length() < Door.OPEN_DISTANCE)
 				{
+					path.add(eP);
 					if(eP.getLevel() == Game.levelNum) Game.nextLevel(eP.getLevel() - 1);
 					else Game.nextLevel(eP.getLevel());
-					path.add(eP);
 				}
 			}
 		}
@@ -113,7 +114,6 @@ public class Level
 
 	public void input(float delta)
 	{
-//		Game.consoleError(Game.levelNum);
 		if(player != null) player.input(delta);
 	}
 
@@ -211,16 +211,9 @@ public class Level
 	private void addDoor(int x, int y)
 	{
 		Transform doorTrans = new Transform();
-
 		boolean xDoor = (levelFloor.getPixel(x, y - 1) & 0xFFFFFF) == 0 && (levelFloor.getPixel(x, y + 1) & 0xFFFFFF) == 0;
 		boolean yDoor = (levelFloor.getPixel(x - 1, y) & 0xFFFFFF) == 0 && (levelFloor.getPixel(x + 1, y) & 0xFFFFFF) == 0;
-
-		if(!(xDoor ^ yDoor))
-		{
-			System.err.println("Door directions are wrong @ (" + x + ", " + y + ")");
-			new Exception().printStackTrace();
-			System.exit(1);
-		}
+		if(!(xDoor ^ yDoor)) Game.crashGame("Door directions are wrong @ (" + x + ", " + y + ")");
 		Vector3f openPosition = null;
 		if(yDoor)
 		{
@@ -242,7 +235,20 @@ public class Level
 		if(blue == RGB.DOOR_BLUE) addDoor(x, y);
 		else if(blue == RGB.PLAYER_BLUE && !playerSpawn) spawnPlayer(new Vector3f((x + 0.5f) * SPOT_WIDTH, PLAYER_HEIGHT, (y + 0.5f) * SPOT_LENGTH));
 		else if(blue == RGB.MEDKIT_BLUE) getMedkits().add(new Medkit(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0, (y + 0.5f) * SPOT_LENGTH)));
-		else if(blue == RGB.EXIT_BLUE) getExitPoints().add(new ExitPoint(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0, (y + 0.5f) * SPOT_LENGTH), green / 256));
+		else if(blue == RGB.EXIT_BLUE)
+		{
+			boolean xDoor1 = (levelFloor.getPixel(x, y - 1) & 0xFFFFFF) == 0;
+			boolean yDoor1 = (levelFloor.getPixel(x - 1, y) & 0xFFFFFF) == 0;
+			boolean xDoor2 = (levelFloor.getPixel(x, y + 1) & 0xFFFFFF) == 0;
+			boolean yDoor2 = (levelFloor.getPixel(x + 1, y) & 0xFFFFFF) == 0;
+//			if(!xDoor1 && !xDoor2 && !yDoor1 && !yDoor2) Game.crashGame("One or more misplaced ExitPoints at: (" + x + "," + y + ") in level: " + getLevelName());
+			int dir = 0;
+			if(xDoor1) dir = 0;
+			else if(xDoor2) dir = 1;
+			else if(yDoor1) dir = 2;
+			else if(yDoor2) dir = 3;
+			getExitPoints().add(new ExitPoint(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0, (y + 0.5f) * SPOT_LENGTH), green / 256, dir));
+		}
 		else if(blue >= RGB.ENTITY_MIN)
 		{
 			for(int i = 0; i < Entity.monsters.length; i++)
@@ -323,7 +329,6 @@ public class Level
 					addVertices(vertices, 0, j, false, true, true, (i + 1), texCoords);
 				}
 			}
-
 		Vertex[] vertArray = new Vertex[vertices.size()];
 		Integer[] intArray = new Integer[indices.size()];
 		vertices.toArray(vertArray);
@@ -335,15 +340,12 @@ public class Level
 	{
 		Vector2f collisionVector = new Vector2f(1, 1);
 		Vector3f movementVector = newPos.sub(oldPos);
-
 		if(movementVector.length() > 0)
 		{
 			Vector2f blockSize = new Vector2f(SPOT_WIDTH, SPOT_LENGTH);
 			Vector2f objectSize = new Vector2f(objectWidth, objectLength);
-
 			Vector2f oldPos2 = new Vector2f(oldPos.getX(), oldPos.getZ());
 			Vector2f newPos2 = new Vector2f(newPos.getX(), newPos.getZ());
-
 			for(int i = 0; i < levelFloor.getWidth(); i++)
 				for(int j = 0; j < levelFloor.getHeight(); j++)
 					if((levelFloor.getPixel(i, j) & 0xFFFFFF) == 0) collisionVector = collisionVector.mul(rectCollide(oldPos2, newPos2, objectSize, blockSize.mul(new Vector2f(i, j)), blockSize));
@@ -362,15 +364,12 @@ public class Level
 	{
 		Vector2f collisionVector = new Vector2f(1, 1);
 		Vector3f movementVector = newPos.sub(oldPos);
-
 		if(movementVector.length() > 0)
 		{
 			Vector2f blockSize = new Vector2f(SPOT_WIDTH, SPOT_LENGTH);
 			Vector2f objectSize = new Vector2f(objectWidth, objectLength);
-
 			Vector2f oldPos2 = new Vector2f(oldPos.getX(), oldPos.getZ());
 			Vector2f newPos2 = new Vector2f(newPos.getX(), newPos.getZ());
-
 			for(int i = 0; i < levelFloor.getWidth(); i++)
 				for(int j = 0; j < levelFloor.getHeight(); j++)
 					if((levelFloor.getPixel(i, j) & 0xFFFFFF) == 0) collisionVector = collisionVector.mul(rectCollide(oldPos2, newPos2, objectSize, blockSize.mul(new Vector2f(i, j)), blockSize));
@@ -391,22 +390,11 @@ public class Level
 	public Entity isLookingAtEntity(Vector2f lineStart, Vector2f lineEnd)
 	{
 		Vector2f nearestIntersection = null;
-
 		for(int i = 0; i < collisionPosStart.size(); i++)
 		{
 			Vector2f collisionVector = lineIntersect(lineStart, lineEnd, collisionPosStart.get(i), collisionPosEnd.get(i));
 			nearestIntersection = findNearestVector2f(nearestIntersection, collisionVector, lineStart);
 		}
-
-		//		for(Door door : doors)
-		//		{
-		//			Vector2f doorSize = door.getDoorSize();
-		//			Vector3f doorPos3 = door.getTransform().getTranslation();
-		//			Vector2f doorPos2 = new Vector2f(doorPos3.getX(), doorPos3.getZ());
-		//
-		//			Vector2f collisionVector = lineIntersectRect(lineStart, lineEnd, doorPos2, doorSize);
-		//			nearestIntersection = findNearestVector2f(nearestIntersection, collisionVector, lineStart);
-		//		}
 
 		Vector2f nearestMonsterIntersect = null;
 		Entity nearestMonster = null;
@@ -658,7 +646,7 @@ public class Level
 		if(miniMap == null) miniMap = new MiniMap(this);
 		playerSpawn = true;
 	}
-	
+
 	private void spawnPlayer(Vector3f vec, ExitPoint oldP, ExitPoint newP)
 	{
 		Vector3f forw = Transform.getCamera().getForward();
@@ -684,14 +672,20 @@ public class Level
 			return false;
 		}
 	}
-	
+
 	public static List<ExitPoint> getCurrentPath()
 	{
 		return path;
 	}
-	
-	public static int getCurrentPathIndex()
+
+	public static ExitPoint getCurrentExitPoint()
 	{
-		return pathIndex;
+		if(path.size() > 0) return path.get(path.size() - 1);
+		else return null;
+	}
+	
+	public int getID()
+	{
+		return levelID;
 	}
 }
