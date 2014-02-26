@@ -19,6 +19,7 @@ public class MiniMap extends GUI
 {
 	private List<Level> levels;
 
+	public static final int SIZE = 32;
 	public static final int MAP_SIZE = 500;
 	public static final int MAP_OFFSET = MAP_SIZE / 2;
 
@@ -29,14 +30,13 @@ public class MiniMap extends GUI
 	private int borderSize = 8;
 	private Vector2f playerPos;
 	private boolean showEnemies = true;
-	private final int size = 32;
 	private int[] pix;
 
 	public MiniMap(Level level)
 	{
 		levels = new ArrayList<Level>();
-		x = Window.getWidth() / scaleX - size - (borderSize / 2);
-		y = Window.getHeight() / scaleY - size - (borderSize / 2);
+		x = Window.getWidth() / scaleX - SIZE - (borderSize / 2);
+		y = Window.getHeight() / scaleY - SIZE - (borderSize / 2);
 		tex = new Texture(MAP_SIZE, MAP_SIZE);
 		pix = new int[MAP_SIZE * MAP_SIZE];
 		addMapPart(level, null, null);
@@ -57,11 +57,11 @@ public class MiniMap extends GUI
 
 	public void render()
 	{
-		RenderUtil.drawRectangle(x * scaleX + (size / 2) * scaleX - 2, y * scaleY + (size / 2) * scaleY - 2, (int)scaleX, (int)scaleY, 255, 0, 0);
 		glPushMatrix();
-		glTranslatef(x * scaleX + (size / 2) * scaleX, y * scaleY + (size / 2) * scaleY, 0);
+		RenderUtil.drawRectangle(x * scaleX + (SIZE / 2) * scaleX - 2, y * scaleY + (SIZE / 2) * scaleY - 2, (int)scaleX, (int)scaleY, 255, 0, 0);
+		glTranslatef(x * scaleX + (SIZE / 2) * scaleX, y * scaleY + (SIZE / 2) * scaleY, 0);
 		glRotatef(Transform.getCamera().getDir(), 0f, 0f, 1f);
-		glTranslatef(-(x * scaleX + (size / 2) * scaleX), -(y * scaleY + (size / 2) * scaleY), -0);
+		glTranslatef(-(x * scaleX + (SIZE / 2) * scaleX), -(y * scaleY + (SIZE / 2) * scaleY), -0);
 		glEnable(GL_SCISSOR_TEST);
 
 		if(showEnemies)
@@ -72,13 +72,12 @@ public class MiniMap extends GUI
 				RenderUtil.drawRectangle((x * scaleX) + (pos.getX() * scaleX) - ((playerPos.getX() - 16) * scaleX) - 2, (y * scaleY) + (pos.getY() * scaleY) - ((playerPos.getY() - 16) * scaleY) - 2, (int)scaleX, (int)scaleY, e.getMinimapColor()[0], e.getMinimapColor()[1], e.getMinimapColor()[2]);
 			}
 		}
-		RenderUtil.drawScaledTexturedRectangle(x - playerPos.getX()/* - oldPlayerPos.getX()*/ + 16, y - playerPos.getY()/* - oldPlayerPos.getY()*/ + 16, scaleX, scaleY, tex);
-//		for(Room room : rooms) RenderUtil.drawScaledTexturedRectangle(x - playerPos.getX() + room.getPosition().getX()/* - oldPlayerPos.getX()*/ + 16 + MAP_OFFSET, y - playerPos.getY() + room.getPosition().getY() + MAP_OFFSET/* - oldPlayerPos.getY()*/ + 16, scaleX, scaleY, room.getTexture());
-		glScissor((int)(x * scaleX), (int)(y * scaleY), (int)(size * scaleX), (int)(size * scaleY));
+		RenderUtil.drawScaledTexturedRectangle(x - playerPos.getX() + 16, y - playerPos.getY() + 16, scaleX, scaleY, tex);
+		glScissor((int)(x * scaleX), (int)(y * scaleY), (int)(SIZE * scaleX), (int)(SIZE * scaleY));
 		glDisable(GL_SCISSOR_TEST);
 		glPopMatrix();
-		RenderUtil.drawRectangle(x * scaleX, y * scaleY, (int)(size * scaleX), (int)(size * scaleY), 0, 0, 0);
-		RenderUtil.drawRectangle(x * scaleX - (borderSize / 2), y * scaleY - (borderSize / 2), (int)(size * scaleX) + borderSize, (int)(size * scaleY) + borderSize, 255, 255, 255);
+		RenderUtil.drawRectangle(x * scaleX, y * scaleY, (int)(SIZE * scaleX), (int)(SIZE * scaleY), 0, 0, 0);
+		RenderUtil.drawRectangle(x * scaleX - (borderSize / 2), y * scaleY - (borderSize / 2), (int)(SIZE * scaleX) + borderSize, (int)(SIZE * scaleY) + borderSize, 255, 255, 255);
 	}
 
 	private void addMap(Texture map)
@@ -137,7 +136,6 @@ public class MiniMap extends GUI
 			Texture map = new Texture(levels.get(i).getLevelMap(), true);
 			map.setID(map.flipY());
 			if(isCurrentLevel(map)) addMap(map);
-//			else if(Level.getCurrentPath().size() > 1) addMap(map, calcOffset(Level.getCurrentExitPoint(), Level.getCurrentPath().get(Level.getCurrentPath().size() - 2)));
 		}
 		tex.setID(tex.setPixels(pix, MAP_SIZE));
 	}

@@ -17,6 +17,7 @@ public class Player
 	
 	private Camera camera;
 	private Random rand;
+	private Inventory inventory;
 	private int health;
 
 	private static boolean mouseLocked = false;
@@ -25,6 +26,7 @@ public class Player
 	public Player(Vector3f pos)
 	{
 		camera = new Camera(pos, new Vector3f(0, 0, 1), new Vector3f(0, 1, 0));
+		inventory = new Inventory();
 		rand = new Random();
 		health = MAX_HEALTH;
 		movementVector = Vector3f.ZERO;
@@ -37,6 +39,8 @@ public class Player
 
 	public void input(float delta)
 	{
+		inventory.input(delta);
+		
 		if(Input.getKeyDown(Input.KEY_E)) Game.getLevel().openDoors(camera.getPos(), true);
 		
 		if(Input.getKey(Input.KEY_ESCAPE))
@@ -84,8 +88,10 @@ public class Player
 
 	public void update(float delta)
 	{
+		inventory.update(delta);
+		
 		float movAmt = (float)(MOVE_SPEED * delta);
-		movementVector.setY(0); //FIXME: Y Dimension shiz
+		movementVector.setY(0); //TODO: Y Dimension shiz
 		if(movementVector.length() > 0) movementVector = movementVector.normalized();
 
 		Vector3f oldPosition = camera.getPos();
@@ -98,12 +104,12 @@ public class Player
 
 	public void render()
 	{
-
+		
 	}
 	
 	public void renderGUI()
 	{
-		//miniMap.render();
+		inventory.render();
 	}
 
 	public Camera getCamera()
@@ -118,7 +124,7 @@ public class Player
 		System.out.println(health);
 		if(health <= 0)
 		{
-			Game.setRunning(false);
+			Game.setRunning(false); //TODO: death
 			Game.consoleMessage("Game over.");
 		}
 	}

@@ -142,6 +142,24 @@ public class RenderUtil
 		glPopMatrix();
 	}
 	
+	public static void drawTexturedRectangle(float x, float y, Texture tex)
+	{
+		glPushMatrix();
+		setTextures(true);
+		bindTexture(tex.getID());
+		glBegin(GL_QUADS);
+		glTexCoord2f(0, 0); // top left
+		glVertex2f(x, y);
+		glTexCoord2f(0, 1); // bottom left 
+		glVertex2f(x, y + tex.getHeight());
+		glTexCoord2f(1, 1); // bottom right
+		glVertex2f(x + tex.getWidth(), y + tex.getHeight());
+		glTexCoord2f(1, 0); // top right
+		glVertex2f(x + tex.getWidth(), y);
+		glEnd();
+		glPopMatrix();
+	}
+	
 	public static void drawScaledTexturedRectangle(float x, float y, float width, float height, org.newdawn.slick.opengl.Texture tex)
 	{
 		glPushMatrix();

@@ -4,11 +4,24 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.Random;
 
 import org.lwjgl.BufferUtils;
 
 public class Util
 {
+	public static int clamp(int a, int min, int max)
+	{
+		if(a > max) return max;
+		else if(a < min) return min;
+		else return a;
+	}
+	
+	public static int getRandomInt()
+	{
+		return new Random().nextInt();
+	}
+	
 	public static FloatBuffer createFloatBuffer(int size)
 	{
 		return BufferUtils.createFloatBuffer(size);
