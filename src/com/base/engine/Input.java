@@ -196,4 +196,9 @@ public class Input
 	{
 		return Mouse.getDWheel();
 	}
+	
+	public static String getKeyName(int i)
+	{
+		return Keyboard.getKeyName(i);
+	}
 }

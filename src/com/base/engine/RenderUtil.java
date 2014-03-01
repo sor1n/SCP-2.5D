@@ -11,9 +11,30 @@ import org.newdawn.slick.util.ResourceLoader;
 
 public class RenderUtil
 {
+	public static void pushMatrix()
+	{
+		glPushMatrix();
+	}
+	
+	public static void popMatrix()
+	{
+		glPopMatrix();
+	}
+	
+	public static void orthoReverse(boolean rev)
+	{
+		if(!rev) glOrtho(0, 800, 0, 600, 1, -1);
+		else glOrtho(0, 800, 600, 0, 1, -1);
+	}
+	
+	public static void setBlending(boolean blend)
+	{
+		if(blend) glEnable(GL_BLEND);
+		else glDisable(GL_BLEND);
+	}
+	
 	public static void clearScreen()
 	{
-		//TODO: Stencil Buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
@@ -85,15 +106,15 @@ public class RenderUtil
 		glPopMatrix();
 	}
 	
-	public static void drawTriangle(float x, float y, int sizeX, int sizeY, float r, float g, float b, float angle, float rX, float rY, float rZ)
+	public static void drawTriangle(float x, float y, int sizeX, int sizeY, int r, int g, int b, float angle, float rX, float rY, float rZ)
 	{
 		glPushMatrix();
 		setTextures(false);
-		glColor3f(r, g, b);
-		glBegin(GL_QUADS);
-		glTranslatef(1f, 1f, 1f);
-		glLoadIdentity();
+		glTranslatef(x + sizeX / 2, y + sizeY / 2, 0);
 		glRotatef(angle, rX, rY, rZ);
+		glTranslatef(-(x + sizeX / 2), -(y + sizeY / 2), -0);
+		new Color(r, g, b).bind();
+		glBegin(GL_QUADS);
 		glTexCoord2f(0, 0); // top left
 		glVertex2f(x + (sizeX / 2), y);
 		glTexCoord2f(0, 1); // bottom left 

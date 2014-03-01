@@ -3,7 +3,6 @@ package com.base.engine.entities;
 import java.util.ArrayList;
 import java.util.Random;
 
-import com.base.engine.EntityUtil;
 import com.base.engine.Game;
 import com.base.engine.Material;
 import com.base.engine.Mesh;
@@ -167,8 +166,7 @@ public class MTF extends Entity
 		float distance = directionToCamera.length();
 		Vector3f orientation = directionToCamera.div(distance);
 		alignWithGround();
-		EntityUtil.faceCamera(transform);
-
+		faceCamera(transform);
 		switch(state)
 		{
 		case STATE_IDLE: idleUpdate(orientation, distance, delta); break;

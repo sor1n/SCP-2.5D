@@ -3,7 +3,6 @@ package com.base.engine.entities;
 import java.util.ArrayList;
 import java.util.Random;
 
-import com.base.engine.EntityUtil;
 import com.base.engine.Game;
 import com.base.engine.Material;
 import com.base.engine.Mesh;
@@ -36,6 +35,8 @@ public class Entity
 	protected int ID;
 	public String entityName;
 
+	protected Vector2f dir;
+
 	protected int[] rgbValue, miniMapColor;
 
 	protected Mesh mesh;
@@ -47,6 +48,8 @@ public class Entity
 	protected int state, health;
 	protected boolean canLook, canAttack, canPassThroughWalls, canOpenDoors;
 	protected double deathTime;
+
+	protected Vector2f randVec;
 
 	public Entity(Transform transform)
 	{
@@ -66,7 +69,8 @@ public class Entity
 		deathTime = 0;
 		state = STATE_IDLE;
 		ID = -1;
-		miniMapColor = new int[]{255, 0, 0};
+		randVec = Vector2f.random();
+//		miniMapColor = new int[]{255, 0, 0};
 	}
 
 	public Entity()
@@ -104,9 +108,10 @@ public class Entity
 		Vector3f directionToCamera = Transform.getCamera().getPos().sub(transform.getTranslation());
 		float distance = directionToCamera.length();
 		Vector3f orientation = directionToCamera.div(distance);
+		if(canSeePlayer(orientation) || state == STATE_CHASE || state == STATE_ATTACK) dir = orientation.getXZ();
+		else dir = randVec;
 		alignWithGround();
-		EntityUtil.faceCamera(transform);
-
+		faceCamera(transform);
 		switch(state)
 		{
 		case STATE_IDLE: idleUpdate(orientation, distance, delta); break;
@@ -170,6 +175,7 @@ public class Entity
 
 	protected void chase(Vector3f orientation, float distance, float delta)
 	{
+		//		dir = orientation.getXZ();
 		double time = (double)Time.getTime();
 		double timeDecimals = time - (double)((int)time);
 
@@ -180,7 +186,6 @@ public class Entity
 		if(distance > STOP_DISTANCE)
 		{
 			float moveAmount = MOVE_SPEED * delta;
-
 			Vector3f oldPos = transform.getTranslation();
 			Vector3f newPos = transform.getTranslation().add(orientation.mul(moveAmount));
 
@@ -225,6 +230,7 @@ public class Entity
 		Vector3f directionToCamera = target.sub(entity.transform.getTranslation());
 		float distance = directionToCamera.length();
 		Vector3f orientation = directionToCamera.div(distance);
+		if(getDistance(entity.transform.getTranslation().getXZ(), target.getXZ()).bigger(new Vector2f(.01f, .01f))) dir = orientation.getXZ();
 
 		float moveAmount = MOVE_SPEED * delta;
 
@@ -236,6 +242,11 @@ public class Entity
 		Vector3f movementVector = collisionVector.mul(orientation);
 		if(movementVector.length() > 0) entity.transform.setTranslation(entity.transform.getTranslation().add(movementVector.mul(moveAmount)));
 		if(movementVector.sub(orientation).length() != 0 && canOpenDoors) Game.getLevel().openDoors(entity.transform.getTranslation(), false);
+	}
+
+	protected Vector2f getDistance(Vector2f ent, Vector2f target)
+	{
+		return target.sub(ent).abs();
 	}
 
 	protected boolean isMoveTo(Entity entity, Vector3f target, float delta)
@@ -261,7 +272,7 @@ public class Entity
 	{
 		return rgbValue;
 	}
-	
+
 	public int[] getMinimapColor()
 	{
 		return miniMapColor;
@@ -271,9 +282,43 @@ public class Entity
 	{
 		return entityName;
 	}
-	
-	public Vector3f getDistanceFromPlayer()
+
+	public Vector3f getDistanceToPlayer()
 	{
-		return Transform.getCamera().getPos().sub(transform.getTranslation());
+		return Transform.getCamera().getPos().sub(transform.getTranslation()).abs();
+	}
+
+	public Vector2f getDirection()
+	{
+		return dir;
+	}
+
+	public boolean canSeePlayer(Vector3f orientation)
+	{
+		Vector2f lineStart = new Vector2f(transform.getTranslation().getX(), transform.getTranslation().getZ());
+		Vector2f castDirection = new Vector2f(orientation.getX(), orientation.getZ());
+		Vector2f lineEnd = lineStart.add(castDirection.mul(SHOOT_DISTANCE));
+		Vector2f collisionVector = Game.getLevel().checkIntersections(lineStart, lineEnd, false);
+		Vector2f playerIntersect = new Vector2f(Transform.getCamera().getPos().getX(), Transform.getCamera().getPos().getZ());
+		if(collisionVector == null || playerIntersect.sub(lineStart).length() < collisionVector.sub(lineStart).length()) return true;
+		else return false;
+	}
+	
+	public static void faceCamera(Transform transform)
+	{
+		Vector3f directionToCamera = Transform.getCamera().getPos().sub(transform.getTranslation());
+		float angleToFaceTheCamera = (float)Math.toDegrees(Math.atan(directionToCamera.getZ() / directionToCamera.getX()));
+		if(directionToCamera.getX() < 0) angleToFaceTheCamera += 180;
+		transform.setRotation(0, angleToFaceTheCamera + 90, 0);
+	}
+	
+	public static float getFacingAngle(Vector2f rotatingObject, Vector2f target)
+	{
+		Vector2f directionToObject = target.sub(rotatingObject);
+		float angle = (float)Math.toDegrees(Math.atan(directionToObject.getY() / directionToObject.getX()));
+		angle += 270;
+		if(directionToObject.getX() < 0) angle += 180;
+		angle += 180;
+		return angle;
 	}
 }

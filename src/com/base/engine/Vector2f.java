@@ -1,5 +1,7 @@
 package com.base.engine;
 
+import java.util.Random;
+
 public class Vector2f 
 {
 	private float x;
@@ -133,4 +135,32 @@ public class Vector2f
 	{
 		return new Vector2i((int)x, (int)y);
 	}
+
+	public static Vector2f random() 
+	{
+		return new Vector2f(new Random().nextFloat(), new Random().nextFloat());
+	}
+	
+	public boolean bigger(Vector2f object)
+	{
+		boolean a = getX() > object.getX();
+		boolean b = getY() > object.getY();
+		return a & b;
+	}
+	
+	public boolean smaller(Vector2f object)
+	{
+		boolean a = getX() < object.getX();
+		boolean b = getY() < object.getY();
+		return a & b;
+	}
+
+//	public Vector2f positive()
+//	{
+//		float xx = x;
+//		float yy = y;
+//		if(xx < 0) xx = -xx;
+//		if(yy < 0) yy = -yy;
+//		return new Vector2f(xx, yy);
+//	}
 }

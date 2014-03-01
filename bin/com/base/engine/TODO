@@ -1,19 +1,21 @@
 		TODO:
 
 - Randomized Levels
-- Level creator for people, instead of coloring a bunch of images
 - Keypads and Keycard doors
-- Item system
 - Lighting
 - Options Menu
 - Main Menu
 - Game Over screen
 - Cheats/Console system
 - Multiplayer (maybe?)
+- Mirrors
+- Cameras/CCTV monitors
 - Achievements
 - Cutscenes
 - Y dimension/axis
-- More user-friendly coloring/coordination system
+- More user-friendly coloring/coordination system (maybe a level creator program?)
+- Font system
+- Particles (SCP-106 Corrosion effect)
 
         BUGS:
-- 
+- Minimap rotation is weird when looking up or down

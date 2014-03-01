@@ -4,20 +4,21 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import com.base.engine.Game;
+import com.base.engine.audio.*;
 import com.base.engine.Texture;
 import com.base.engine.Time;
 import com.base.engine.Transform;
+import com.base.engine.Util;
 import com.base.engine.Vector3f;
 
 public class SCP096 extends Entity
 {
-	public static final double TIME_DELAY = 200.0;
-
 	public float viewingAngle = 0.2f;
 
-	private double cryTime = 0;
 	private Vector3f target = null;
 	private double targetInt = 0;
+
+	private int soundDelay = 0;
 
 	public SCP096(Transform transform)
 	{
@@ -40,7 +41,7 @@ public class SCP096 extends Entity
 		rgbValue = new int[]{0xFF0000, 0, 21};
 		miniMapColor = new int[]{255, 233, 163};
 	}
-	
+
 	public SCP096()
 	{
 		this(new Transform());
@@ -50,9 +51,8 @@ public class SCP096 extends Entity
 	protected void idleUpdate(Vector3f orientation, float distance, float delta)
 	{
 		MOVE_SPEED = 1f;
-		cryTime = 0;
 		super.idleUpdate(orientation, distance, delta);
-		if(isPlayerDirectlyLooking(orientation, viewingAngle)) state = STATE_DYING;
+		if(isPlayerDirectlyLooking(orientation, viewingAngle)) SoundSystem.playSound(SoundSystem.SCP096_CRY, transform.getTranslation(), 35f);
 		else if(new Random().nextInt(200) < 20 && target == null)
 		{
 			targetInt = 0;
@@ -68,6 +68,7 @@ public class SCP096 extends Entity
 			walkAnim(getTimeDecimal());
 			if(targetInt > 1600) target = null;
 		}
+		if(SoundSystem.isPlaying(SoundSystem.SCP096_CRY)) state = STATE_DYING;
 	}
 
 	@Override
@@ -92,8 +93,20 @@ public class SCP096 extends Entity
 	@Override
 	protected void chaseUpdate(Vector3f orientation, float distance, float delta)
 	{
-		MOVE_SPEED = Math.abs(getDistanceFromPlayer().getZ() + getDistanceFromPlayer().getX()) + 2f;
+		MOVE_SPEED = getDistanceToPlayer().getZ() + getDistanceToPlayer().getX() + 2f;
 		chase(orientation, distance, delta);
+		if(!SoundSystem.isPlaying(SoundSystem.SCP096_SCREAM) && soundDelay <= 0)
+		{
+			SoundSystem.playSound(SoundSystem.SCP096_SCREAM, transform.getTranslation(), 30f, Util.clamp(new Random().nextFloat() + 0.8f, 0.8f, 1f));
+			soundDelay = new Random().nextInt(20000) + 10000;
+		}
+		if(soundDelay > 0) soundDelay--;
+	}
+
+	@Override
+	public void update(float delta)
+	{
+		super.update(delta);
 	}
 
 	protected void walkAnim(double timeDecimals)
@@ -114,12 +127,6 @@ public class SCP096 extends Entity
 	}
 
 	@Override
-	public void update(float delta)
-	{
-		super.update(delta);
-	}
-
-	@Override
 	public void render()
 	{
 		super.render();
@@ -131,8 +138,8 @@ public class SCP096 extends Entity
 		else if(timeDecimals < 0.5) material.setTexture(animations.get(4));
 		else if(timeDecimals < 0.75) material.setTexture(animations.get(3));
 		else material.setTexture(animations.get(4));
-		cryTime += 0.01;
-		if(cryTime > TIME_DELAY) state = STATE_CHASE;
+		if(!SoundSystem.isPlaying(SoundSystem.SCP096_CRY)) state = STATE_CHASE;
+		else SoundSystem.setPosition(SoundSystem.SCP096_CRY, transform.getTranslation());
 	}
 
 	protected void chase(Vector3f orientation, float distance, float delta)

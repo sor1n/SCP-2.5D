@@ -7,7 +7,16 @@ public class Camera
 	private Vector3f pos;
 	private Vector3f forward;
 	private Vector3f up;
+	private Matrix4f projection;
 
+	public Camera(float fov, float aspect, float zNear, float zFar)
+	{
+		this.pos = Vector3f.ZERO;
+		this.forward = new Vector3f(0, 0, 1).normalized();
+		this.up = new Vector3f(0, 1, 0).normalized();
+		this.projection = new Matrix4f().initPerspective(fov, aspect, zNear, zFar);
+	}
+	
 	public Camera()
 	{
 		this(new Vector3f(0,0,0), new Vector3f(0,0,1), new Vector3f(0,1,0));
@@ -56,22 +65,11 @@ public class Camera
 
 			boolean rotY = deltaPos.getX() != 0;
 			boolean rotX = deltaPos.getY() != 0;
-
-			if(rotY)
-				rotateY(deltaPos.getX() * sensitivity);
-			if(rotX)
-				rotateX(-deltaPos.getY() * sensitivity);
-			if(rotY || rotX)
-				Input.setMousePosition(new Vector2f(Window.getWidth()/2, Window.getHeight()/2));
+			
+			if(rotY) rotateY(deltaPos.getX() * sensitivity);
+			if(rotX) rotateX(-deltaPos.getY() * sensitivity);
+			if(rotY || rotX) Input.setMousePosition(new Vector2f(Window.getWidth()/2, Window.getHeight()/2));
 		}
-		//		if(Input.getKey(Input.KEY_UP))
-		//			rotateX(-rotAmt);
-		//		if(Input.getKey(Input.KEY_DOWN))
-		//			rotateX(rotAmt);
-		//		if(Input.getKey(Input.KEY_LEFT))
-		//			rotateY(-rotAmt);
-		//		if(Input.getKey(Input.KEY_RIGHT))
-		//			rotateY(rotAmt);
 	}
 
 	public void move(Vector3f dir, float amt)
@@ -154,5 +152,12 @@ public class Camera
 		else if(a < 0 && a > -9 && b == 9) return 337;
 		else if(a > 0 && a < 9 && b == 9) return 22;
 		else return 0;
+	}
+
+	public Matrix4f getViewProjection()
+	{
+		Matrix4f cameraRot = new Matrix4f().initRotation(forward, up);
+		Matrix4f cameraTrans = new Matrix4f().initTranslation(-pos.getX(), -pos.getY(), -pos.getZ());
+		return projection.mul(cameraRot.mul(cameraTrans));
 	}
 }

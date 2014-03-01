@@ -13,6 +13,9 @@ public class Mesh
 	private int vbo; //Vertex
 	private int ibo; //Index
 	private int size;
+	
+	private Vertex[] vertex;
+	private int[] index;
 
 	public Mesh(String fileName)
 	{
@@ -28,6 +31,8 @@ public class Mesh
 	public Mesh(Vertex[] vertices, int[] indices, boolean calcNormals)
 	{
 		initMeshData();
+		this.vertex = vertices;
+		this.index = indices;
 		addVertices(vertices, indices, calcNormals);
 	}
 
@@ -162,5 +167,15 @@ public class Mesh
 		}
 
 		return null;
+	}
+	
+	public Vertex[] getVertices()
+	{
+		return vertex;
+	}
+	
+	public int[] getIndices()
+	{
+		return index;
 	}
 }

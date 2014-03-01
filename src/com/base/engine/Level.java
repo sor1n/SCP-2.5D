@@ -6,6 +6,8 @@ import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.base.engine.entities.Entity;
+import com.base.engine.itementities.ItemEntity;
+import com.base.engine.itementities.Medkit;
 
 public class Level 
 {
@@ -34,12 +36,12 @@ public class Level
 
 	private List<Door> doors;
 	private List<Entity> monsters;
-	private List<Medkit> medkits;
+	private List<ItemEntity> itemEntities;
 	private List<ExitPoint> exitPoints;
 	private List<Particle> particles;
 
 	private ArrayList<Vector2f> collisionPosStart, collisionPosEnd;
-	
+
 	public Level(String lvlName, TexturePack texture, boolean init)
 	{
 		levelID = new Random().nextInt();
@@ -62,9 +64,9 @@ public class Level
 		transform = new Transform();
 		shader = PhongShader.getInstance();
 		generateLevel();
-		
+
 		PhongShader.setAmbientLight(new Vector3f(.8f, .8f, .8f));
-		
+
 		getLevels().add(this);
 		if(playerSpawn && player == null)
 		{
@@ -75,13 +77,13 @@ public class Level
 				{
 					if(exit.getLevel() == points.getLevel())
 					{
+						Inventory inv = Game.getLevel().getPlayer().getInventory();
 						Vector3f solid = findSolidPlace(exit.getExitPoint().getXZ().toInt());
-						spawnPlayer(new Vector3f((solid.getX() + 0.5f) * SPOT_WIDTH, PLAYER_HEIGHT, (solid.getZ() + 0.5f) * SPOT_LENGTH), points, exit);
+						spawnPlayer(new Vector3f((solid.getX() + 0.5f) * SPOT_WIDTH, PLAYER_HEIGHT, (solid.getZ() + 0.5f) * SPOT_LENGTH), points, exit, inv);
 						break;
 					}
 				}
 		}
-		//		pathIndex++;
 	}
 
 	public void openDoors(Vector3f pos, boolean exit)
@@ -115,6 +117,7 @@ public class Level
 	public void input(float delta)
 	{
 		if(player != null) player.input(delta);
+		for(ItemEntity med : getItemEntities()) med.input(delta);
 	}
 
 	public void update(float delta)
@@ -122,7 +125,7 @@ public class Level
 		for(Door door : getDoors()) door.update(delta);
 		for(Particle particle : getParticles()) particle.update(delta);
 		for(Entity monster : getMonsters()) monster.update(delta);
-		for(Medkit med : getMedkits()) med.update(delta);
+		for(ItemEntity med : getItemEntities()) med.update(delta);
 		if(player != null) player.update(delta);
 		if(miniMap != null) miniMap.update(delta);
 	}
@@ -135,7 +138,7 @@ public class Level
 		for(Door door : getDoors()) door.render();
 		for(Particle particle : getParticles()) particle.render();
 		for(Entity monster : getMonsters()) monster.render();
-		for(Medkit med : getMedkits()) med.render();
+		for(ItemEntity med : getItemEntities()) med.render();
 		if(player != null) player.render();
 	}
 
@@ -144,6 +147,7 @@ public class Level
 		shader.unbind();
 		RenderUtil.unbindTextures();
 		RenderUtil.setTextures(true);
+		for(ItemEntity med : getItemEntities()) med.render2D();
 		if(player != null) player.renderGUI();
 		if(miniMap != null) miniMap.render();
 	}
@@ -234,14 +238,14 @@ public class Level
 	{
 		if(blue == RGB.DOOR_BLUE) addDoor(x, y);
 		else if(blue == RGB.PLAYER_BLUE && !playerSpawn) spawnPlayer(new Vector3f((x + 0.5f) * SPOT_WIDTH, PLAYER_HEIGHT, (y + 0.5f) * SPOT_LENGTH));
-		else if(blue == RGB.MEDKIT_BLUE) getMedkits().add(new Medkit(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0, (y + 0.5f) * SPOT_LENGTH)));
+		else if(blue == RGB.MEDKIT_BLUE) getItemEntities().add(new Medkit(new Vector3f((x + 0.5f) * SPOT_WIDTH, 0, (y + 0.5f) * SPOT_LENGTH)));
 		else if(blue == RGB.EXIT_BLUE)
 		{
 			boolean xDoor1 = (levelFloor.getPixel(x, y - 1) & 0xFFFFFF) == 0;
 			boolean yDoor1 = (levelFloor.getPixel(x - 1, y) & 0xFFFFFF) == 0;
 			boolean xDoor2 = (levelFloor.getPixel(x, y + 1) & 0xFFFFFF) == 0;
 			boolean yDoor2 = (levelFloor.getPixel(x + 1, y) & 0xFFFFFF) == 0;
-//			if(!xDoor1 && !xDoor2 && !yDoor1 && !yDoor2) Game.crashGame("One or more misplaced ExitPoints at: (" + x + "," + y + ") in level: " + getLevelName());
+			//			if(!xDoor1 && !xDoor2 && !yDoor1 && !yDoor2) Game.crashGame("One or more misplaced ExitPoints at: (" + x + "," + y + ") in level: " + getLevelName());
 			int dir = 0;
 			if(xDoor1) dir = 0;
 			else if(xDoor2) dir = 1;
@@ -274,7 +278,7 @@ public class Level
 	{
 		doors = new CopyOnWriteArrayList<Door>();
 		monsters = new CopyOnWriteArrayList<Entity>();
-		medkits = new CopyOnWriteArrayList<Medkit>();
+		itemEntities = new CopyOnWriteArrayList<ItemEntity>();
 		exitPoints = new CopyOnWriteArrayList<ExitPoint>();
 		particles = new CopyOnWriteArrayList<Particle>();
 		collisionPosStart = new ArrayList<Vector2f>();
@@ -534,9 +538,9 @@ public class Level
 		return monsters;
 	}
 
-	public synchronized List<Medkit> getMedkits()
+	public synchronized List<ItemEntity> getItemEntities()
 	{
-		return medkits;
+		return itemEntities;
 	}
 
 	public synchronized List<ExitPoint> getExitPoints()
@@ -640,18 +644,18 @@ public class Level
 
 	private void spawnPlayer(Vector3f vec)
 	{
-		player = new Player(vec);
+		player = new Player(vec, null);
 		Transform.setProjection(70, Window.getWidth(), Window.getHeight(), 0.01f, 1000f);
 		Transform.setCamera(player.getCamera());
 		if(miniMap == null) miniMap = new MiniMap(this);
 		playerSpawn = true;
 	}
 
-	private void spawnPlayer(Vector3f vec, ExitPoint oldP, ExitPoint newP)
+	private void spawnPlayer(Vector3f vec, ExitPoint oldP, ExitPoint newP, Inventory inventory)
 	{
 		Vector3f forw = Transform.getCamera().getForward();
 		Vector3f up = Transform.getCamera().getUp();
-		player = new Player(vec);
+		player = new Player(vec, inventory);
 		Transform.setProjection(70, Window.getWidth(), Window.getHeight(), 0.01f, 1000f);
 		Transform.setCamera(player.getCamera());
 		Transform.getCamera().setForward(forw);
@@ -683,7 +687,7 @@ public class Level
 		if(path.size() > 0) return path.get(path.size() - 1);
 		else return null;
 	}
-	
+
 	public int getID()
 	{
 		return levelID;

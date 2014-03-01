@@ -94,6 +94,15 @@ public class Vector2i
 		return new Vector2i(Math.abs(x), Math.abs(y));
 	}
 	
+	public Vector2i positive()
+	{
+		int xx = x;
+		int yy = y;
+		if(xx < 0) xx = -xx;
+		if(yy < 0) yy = -yy;
+		return new Vector2i(xx, yy);
+	}
+	
 	public int cross(Vector2i r)
 	{
 		return x * r.getY() - y * r.getX();
@@ -124,8 +133,17 @@ public class Vector2i
 		this.y = y;
 	}
 	
-//	public static Vector3f getVector3f(Vector2i a)
-//	{
-//		return new Vector3f(a.getX(), a.getY(), 0);
-//	}
+	public boolean bigger(Vector2i object)
+	{
+		boolean a = getX() > object.getX();
+		boolean b = getY() > object.getY();
+		return a & b;
+	}
+	
+	public boolean smaller(Vector2i object)
+	{
+		boolean a = getX() < object.getX();
+		boolean b = getY() < object.getY();
+		return a & b;
+	}
 }

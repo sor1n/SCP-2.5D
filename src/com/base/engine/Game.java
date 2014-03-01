@@ -1,7 +1,8 @@
 package com.base.engine;
 
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
+
+import com.base.engine.audio.SoundSystem;
 
 public class Game 
 {
@@ -17,6 +18,7 @@ public class Game
 
 	public void input(float delta)
 	{
+		Window.input();
 		if(isRunning && level != null) level.input(delta);
 	}
 
@@ -76,6 +78,7 @@ public class Game
 	
 	public static void crashGame(String text)
 	{
+		SoundSystem.destroy();
 		consoleError(text);
 		new Exception().printStackTrace();
 		System.exit(1);

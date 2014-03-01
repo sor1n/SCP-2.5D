@@ -11,7 +11,7 @@ public class Slot
 	private static Texture texture, select;
 	private Texture tex;
 	private boolean hideable, show;
-	private int id = 0;
+	private int id;
 	private int offset = 0;
 
 	public Slot(Vector2i pos, boolean hideable)
@@ -21,12 +21,13 @@ public class Slot
 		if(texture == null) texture = new Texture("Tile_Cell.png");
 		if(select == null) select = new Texture("Tile_Select.png");
 		tex = texture;
+		id = 0;
 	}
 
 	public void input(float delta)
 	{
-		show = Input.getKey(Input.KEY_TAB);
-		if(((show && hideable) || !hideable) && isSelected()) Item.getItem(id).onUse(this);
+		show = Input.getKey(Options.KEY_OPENINV);
+		if(((show && hideable) || !hideable) && isSelected() && Input.getMouseDown(1)) Item.getItem(id).onUse(this);
 	}
 
 	public void update(float delta)
@@ -39,10 +40,7 @@ public class Slot
 	{
 		if((show && hideable) || !hideable)
 		{
-			if(id != 0)
-			{
-				RenderUtil.drawScaledTexturedRectangle((pos.getX() / scale) + ((tex.getWidth() * scale) / 2), pos.getY() / scale * ITEM_SIZE, ITEM_SIZE, ITEM_SIZE, Item.getItem(id).getTexture());
-			}
+			if(id != 0) RenderUtil.drawScaledTexturedRectangle((pos.getX() / ITEM_SIZE) + (size / 2) - (BORDER_SIZE * ITEM_SIZE), (pos.getY() / ITEM_SIZE) + (size / 2) - (BORDER_SIZE * ITEM_SIZE), ITEM_SIZE, ITEM_SIZE, Item.getItem(id).getTexture());
 			RenderUtil.drawScaledTexturedRectangle(pos.getX() / scale, pos.getY() / scale + offset, scale, scale, tex);
 		}
 	}
@@ -60,6 +58,11 @@ public class Slot
 	public void setItem(Item item)
 	{
 		id = item.getID();
+	}
+	
+	public void setItem(int id)
+	{
+		this.id = id;
 	}
 
 	public Item getHoldingItem()

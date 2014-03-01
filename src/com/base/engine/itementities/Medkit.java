@@ -1,8 +1,17 @@
-package com.base.engine;
+package com.base.engine.itementities;
 
-public class Medkit
+import com.base.engine.Material;
+import com.base.engine.Mesh;
+import com.base.engine.MeshRenderer;
+import com.base.engine.Texture;
+import com.base.engine.Transform;
+import com.base.engine.Vector2f;
+import com.base.engine.Vector3f;
+import com.base.engine.Vertex;
+import com.base.engine.items.Item;
+
+public class Medkit extends ItemEntity
 {
-	public static final float PICKUP_DISTANCE = 0.75f;
 	public static final int HEAL_AMOUNT = 25;
 
 	public static final float START = 0, SCALE = 0.25f, SIZEY = SCALE, SIZEX = (float)((double)SIZEY / (1.0379746835443037974683544303797 * 2.0));
@@ -11,10 +20,10 @@ public class Medkit
 
 	private static Mesh mesh;
 	private static Material material;
-	private Transform transform;
 
 	public Medkit(Vector3f pos)
 	{
+		super(Item.medkit, "Medkit");
 		if(material == null) material = new Material(new Texture("MEDIA0.png"));
 		if(mesh == null)
 		{
@@ -26,30 +35,20 @@ public class Medkit
 					0, 2, 3};
 			mesh = new Mesh(vertices, indices);
 		}
+		meshRenderer = new MeshRenderer(mesh, material);
 		transform = new Transform();
 		transform.setTranslation(pos);
+		miniMapColor = new int[]{255, 0, 0};
 	}
-
-	public void update(float delta)
+	
+	public void onPickUp()
 	{
-		EntityUtil.faceCamera(transform);
-
-		Vector3f dirToCam = Transform.getCamera().getPos().sub(transform.getTranslation());
-		if(dirToCam.length() < PICKUP_DISTANCE)
-		{
-			Player player = Game.getLevel().getPlayer();
-			if(player.getHealth() < Player.MAX_HEALTH)
-			{
-				player.damage(-HEAL_AMOUNT);
-				Game.getLevel().getMedkits().remove(this);
-			}
-		}
-	}
-
-	public void render()
-	{
-		Shader shader = Game.getLevel().getShader();
-		shader.updateUniforms(transform.getTransformation(), transform.getProjectedTransformation(), material);
-		mesh.draw();
+		super.onPickUp();
+//		Player player = Game.getLevel().getPlayer();
+//		if(player.getHealth() < Player.MAX_HEALTH)
+//		{
+//			player.damage(-HEAL_AMOUNT);
+//			removeItem();
+//		}
 	}
 }

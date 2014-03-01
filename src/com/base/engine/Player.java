@@ -2,6 +2,8 @@ package com.base.engine;
 
 import java.util.Random;
 
+import com.base.engine.audio.SoundSystem;
+
 public class Player
 {
 	public static final float START = 0, SCALE = 0.0625f, SIZEY = SCALE, SIZEX = (float)((double)SIZEY / (1.0379746835443037974683544303797 * 2.0));
@@ -23,10 +25,11 @@ public class Player
 	private static boolean mouseLocked = false;
 	private Vector3f movementVector;
 	
-	public Player(Vector3f pos)
+	public Player(Vector3f pos, Inventory inventory)
 	{
 		camera = new Camera(pos, new Vector3f(0, 0, 1), new Vector3f(0, 1, 0));
-		inventory = new Inventory();
+		if(inventory == null) this.inventory = new Inventory();
+		else this.inventory = inventory;
 		rand = new Random();
 		health = MAX_HEALTH;
 		movementVector = Vector3f.ZERO;
@@ -88,6 +91,7 @@ public class Player
 
 	public void update(float delta)
 	{
+		SoundSystem.updateListener(camera);
 		inventory.update(delta);
 		
 		float movAmt = (float)(MOVE_SPEED * delta);
@@ -121,7 +125,7 @@ public class Player
 	{
 		health -= i;
 		if(health > MAX_HEALTH) health = 100;
-		System.out.println(health);
+		Game.consoleMessage(health);
 		if(health <= 0)
 		{
 			Game.setRunning(false); //TODO: death
@@ -132,5 +136,10 @@ public class Player
 	public int getHealth()
 	{
 		return health;
+	}
+	
+	public Inventory getInventory()
+	{
+		return inventory;
 	}
 }

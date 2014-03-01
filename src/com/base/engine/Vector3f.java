@@ -20,6 +20,11 @@ public class Vector3f
 		return (float)Math.sqrt(x * x + y * y + z * z);
 	}
 	
+	public float max()
+	{
+		return Math.max(x, Math.max(y, z));
+	}
+	
 	public float dot(Vector3f r)
 	{
 		return x * r.getX() + y * r.getY() + z * r.getZ();
@@ -56,6 +61,13 @@ public class Vector3f
 		
 		Quaternion w = rotation.mul(this).mul(conjugate);
 		
+		return new Vector3f(w.getX(), w.getY(), w.getZ());
+	}
+	
+	public Vector3f rotate(Quaternion rotation)
+	{
+		Quaternion conjugate = rotation.conjugate();
+		Quaternion w = rotation.mul(this).mul(conjugate);
 		return new Vector3f(w.getX(), w.getY(), w.getZ());
 	}
 	
@@ -123,21 +135,6 @@ public class Vector3f
 	{
 		return x;
 	}
-	
-	public int getXInt()
-	{
-		return (int)x;
-	}
-	
-	public int getYInt()
-	{
-		return (int)y;
-	}
-	
-	public int getZInt()
-	{
-		return (int)z;
-	}
 
 	public void setX(float x) 
 	{
@@ -192,5 +189,18 @@ public class Vector3f
 	public Vector2f getXZ()
 	{
 		return new Vector2f(x, z);
+	}
+
+	public Vector3f set(Vector3f translation)
+	{
+		this.x = translation.getX();
+		this.y = translation.getY();
+		this.z = translation.getZ();
+		return this;
+	}
+	
+	public Vector3i toInt()
+	{
+		return new Vector3i((int)x, (int)y, (int)z);
 	}
 }

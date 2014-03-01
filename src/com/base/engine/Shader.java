@@ -1,10 +1,34 @@
 package com.base.engine;
 
-import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL32.*;
+import static org.lwjgl.opengl.GL20.GL_COMPILE_STATUS;
+import static org.lwjgl.opengl.GL20.GL_FRAGMENT_SHADER;
+import static org.lwjgl.opengl.GL20.GL_LINK_STATUS;
+import static org.lwjgl.opengl.GL20.GL_VALIDATE_STATUS;
+import static org.lwjgl.opengl.GL20.GL_VERTEX_SHADER;
+import static org.lwjgl.opengl.GL20.glAttachShader;
+import static org.lwjgl.opengl.GL20.glCompileShader;
+import static org.lwjgl.opengl.GL20.glCreateProgram;
+import static org.lwjgl.opengl.GL20.glCreateShader;
+import static org.lwjgl.opengl.GL20.glGetProgram;
+import static org.lwjgl.opengl.GL20.glGetProgramInfoLog;
+import static org.lwjgl.opengl.GL20.glGetShader;
+import static org.lwjgl.opengl.GL20.glGetShaderInfoLog;
+import static org.lwjgl.opengl.GL20.glGetUniformLocation;
+import static org.lwjgl.opengl.GL20.glLinkProgram;
+import static org.lwjgl.opengl.GL20.glShaderSource;
+import static org.lwjgl.opengl.GL20.glUniform1f;
+import static org.lwjgl.opengl.GL20.glUniform1i;
+import static org.lwjgl.opengl.GL20.glUniform3f;
+import static org.lwjgl.opengl.GL20.glUniformMatrix4;
+import static org.lwjgl.opengl.GL20.glUseProgram;
+import static org.lwjgl.opengl.GL20.glValidateProgram;
+import static org.lwjgl.opengl.GL32.GL_GEOMETRY_SHADER;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.DataInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.HashMap;
 
 public class Shader
@@ -130,12 +154,13 @@ public class Shader
 	{
 		StringBuilder shaderSource = new StringBuilder();
 		BufferedReader shaderReader = null;
-		
 		try
 		{
-			shaderReader = new BufferedReader(new FileReader("./res/shaders/" + fileName));
+			URL urlToDictionary = MainComponent.class.getClass().getResource("/shaders/" + fileName);
+			InputStream stream = urlToDictionary.openStream();
+			DataInputStream in = new DataInputStream(stream);
+			shaderReader = new BufferedReader(new InputStreamReader(in));
 			String line;
-			
 			while((line = shaderReader.readLine()) != null)
 			{
 				shaderSource.append(line).append("\n");

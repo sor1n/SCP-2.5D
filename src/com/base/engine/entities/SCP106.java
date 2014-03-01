@@ -1,13 +1,15 @@
 package com.base.engine.entities;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 import com.base.engine.Game;
 import com.base.engine.Texture;
 import com.base.engine.Time;
 import com.base.engine.Transform;
-import com.base.engine.Vector2f;
+import com.base.engine.Util;
 import com.base.engine.Vector3f;
+import com.base.engine.audio.SoundSystem;
 
 public class SCP106 extends Entity
 {
@@ -50,12 +52,7 @@ public class SCP106 extends Entity
 			material.setTexture(animations.get(1));
 			if(canLook)
 			{
-				Vector2f lineStart = new Vector2f(transform.getTranslation().getX(), transform.getTranslation().getZ());
-				Vector2f castDirection = new Vector2f(orientation.getX(), orientation.getZ());
-				Vector2f lineEnd = lineStart.add(castDirection.mul(SHOOT_DISTANCE));
-				Vector2f collisionVector = Game.getLevel().checkIntersections(lineStart, lineEnd, false);
-				Vector2f playerIntersect = new Vector2f(Transform.getCamera().getPos().getX(), Transform.getCamera().getPos().getZ());
-				if(collisionVector == null || playerIntersect.sub(lineStart).length() < collisionVector.sub(lineStart).length()) state = STATE_CHASE;
+				if(canSeePlayer(orientation)) state = STATE_CHASE;
 				canLook = false;
 			}
 		}
@@ -84,6 +81,7 @@ public class SCP106 extends Entity
 	protected void chaseUpdate(Vector3f orientation, float distance, float delta)
 	{
 		chase(orientation, distance, delta);
+		if(!SoundSystem.isPlaying(SoundSystem.SCP106LAUGH) && new Random().nextInt(9000) == 0) SoundSystem.playSound(SoundSystem.SCP106LAUGH, transform.getTranslation(), 20f, Util.clamp(new Random().nextFloat() + 0.9f, 0.9f, 1f));
 	}
 
 	@Override
@@ -93,11 +91,6 @@ public class SCP106 extends Entity
 		else if(timeDecimals < 0.5) material.setTexture(animations.get(1));
 		else if(timeDecimals < 0.75) material.setTexture(animations.get(0));
 		else material.setTexture(animations.get(2));
-	}
-
-	public void render()
-	{
-		super.render();
 	}
 
 	@Override
@@ -130,11 +123,11 @@ public class SCP106 extends Entity
 					//new Corrosion(new Vector3f(((int)(posX) - (Level.SPOT_WIDTH / 2)), 0, (int)(posZ) + 0.01f + Level.SPOT_LENGTH), 2).spawn(Game.getLevel());
 					//new Corrosion(new Vector3f(((int)(posX) - 0.01f - Level.SPOT_WIDTH), 0, (int)(posZ) + (Level.SPOT_LENGTH / 2)), 3).spawn(Game.getLevel());
 				}
-				if(Game.getLevel().getParticles().size() > 4)
-				{
-					Vector3f trans = Game.getLevel().getParticles().get(5).getTransform().getTranslation();
-					Game.consoleMessage(Game.getLevel().isAir(trans.getXInt(), trans.getZInt()));
-				}
+//				if(Game.getLevel().getParticles().size() > 4)
+//				{
+//					Vector3f trans = Game.getLevel().getParticles().get(5).getTransform().getTranslation();
+//					Game.consoleMessage(Game.getLevel().isAir(trans.getXInt(), trans.getZInt()));
+//				}
 			}
 			if(collisionVector.getX() == 1 && collisionVector.getZ() == 1) collisionDelay = 0;
 			if(canPassThroughWalls) collisionVector = new Vector3f(1f, 0f, 1f);
